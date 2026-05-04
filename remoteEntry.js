@@ -1,0 +1,298 @@
+import { i as init_1, b as ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__ } from './assets/ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
+import exposesMap from './assets/virtualExposes-CVeKwzjY.js';
+import { _ as __vitePreload } from './assets/preload-helper-B5tfdMne.js';
+
+const importMap = {
+      
+        "@emotion/cache": async () => {
+          let pkg = await __vitePreload(() => import('./assets/emotion-cache.browser.esm-Dp3YbwdK.js'),true?[]:undefined);
+          return pkg
+        }
+      ,
+        "@emotion/react": async () => {
+          let pkg = await __vitePreload(() => import('./assets/emotion-react.browser.esm-DVozDKeg.js'),true?[]:undefined);
+          return pkg
+        }
+      ,
+        "@emotion/styled": async () => {
+          let pkg = await __vitePreload(() => import('./assets/emotion-styled.browser.esm-BLwiQQn2.js'),true?[]:undefined);
+          return pkg
+        }
+      ,
+        "@mui/material": async () => {
+          let pkg = await __vitePreload(() => import('./assets/index-YzRbSrvs.js'),true?[]:undefined);
+          return pkg
+        }
+      ,
+        "@mui/styled-engine": async () => {
+          let pkg = await __vitePreload(() => import('./assets/index-D5f_E342.js'),true?[]:undefined);
+          return pkg
+        }
+      ,
+        "react": async () => {
+          let pkg = await __vitePreload(() => import('./assets/index-Cb0aMwq0.js').then(n => n.i),true?[]:undefined);
+          return pkg
+        }
+      ,
+        "react-dom": async () => {
+          let pkg = await __vitePreload(() => import('./assets/index-CkeUDiBL.js').then(n => n.i),true?[]:undefined);
+          return pkg
+        }
+      ,
+        "three": async () => {
+          let pkg = await __vitePreload(() => import('./assets/three.module-wdyv8Ec4.js'),true?[]:undefined);
+          return pkg
+        }
+      
+    };
+      const usedShared = {
+      
+          "@emotion/cache": {
+            name: "@emotion/cache",
+            version: "11.14.0",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["@emotion/cache"].loaded = true;
+              const {"@emotion/cache": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^11.14.0"
+            }
+          }
+        ,
+          "@emotion/react": {
+            name: "@emotion/react",
+            version: "11.14.0",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["@emotion/react"].loaded = true;
+              const {"@emotion/react": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^11.10.0"
+            }
+          }
+        ,
+          "@emotion/styled": {
+            name: "@emotion/styled",
+            version: "11.14.1",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["@emotion/styled"].loaded = true;
+              const {"@emotion/styled": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^11.10.5"
+            }
+          }
+        ,
+          "@mui/material": {
+            name: "@mui/material",
+            version: "7.3.5",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["@mui/material"].loaded = true;
+              const {"@mui/material": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^7.1.1"
+            }
+          }
+        ,
+          "@mui/styled-engine": {
+            name: "@mui/styled-engine",
+            version: "7.1.1",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["@mui/styled-engine"].loaded = true;
+              const {"@mui/styled-engine": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^7.1.1"
+            }
+          }
+        ,
+          "react": {
+            name: "react",
+            version: "19.1.1",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["react"].loaded = true;
+              const {"react": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "19.1.1"
+            }
+          }
+        ,
+          "react-dom": {
+            name: "react-dom",
+            version: "19.1.1",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["react-dom"].loaded = true;
+              const {"react-dom": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "19.1.1"
+            }
+          }
+        ,
+          "three": {
+            name: "three",
+            version: "0.177.0",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["three"].loaded = true;
+              const {"three": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^0.177.0"
+            }
+          }
+        
+    };
+      const usedRemotes = [
+      ];
+
+const initTokens = {};
+  const shareScopeName = "default";
+  const mfName = "ballerstaedt-veredelung";
+  async function init(shared = {}, initScope = []) {
+    const initRes = init_1({
+      name: mfName,
+      remotes: usedRemotes,
+      shared: usedShared,
+      plugins: [],
+      shareStrategy: 'version-first'
+    });
+    // handling circular init calls
+    var initToken = initTokens[shareScopeName];
+    if (!initToken)
+      initToken = initTokens[shareScopeName] = { from: mfName };
+    if (initScope.indexOf(initToken) >= 0) return;
+    initScope.push(initToken);
+    initRes.initShareScopeMap('default', shared);
+    try {
+      await Promise.all(await initRes.initializeSharing('default', {
+        strategy: 'version-first',
+        from: "build",
+        initScope
+      }));
+    } catch (e) {
+      console.error(e);
+    }
+    ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__.initResolve(initRes);
+    return initRes
+  }
+
+  function getExposes(moduleName) {
+    if (!(moduleName in exposesMap)) throw new Error(`Module ${moduleName} does not exist in container.`)
+    return (exposesMap[moduleName])().then(res => () => res)
+  }
+
+export { getExposes as get, init };
