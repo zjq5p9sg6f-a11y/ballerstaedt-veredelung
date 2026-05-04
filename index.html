@@ -416,13 +416,17 @@
       /*  ╭─ Auto-fade · UI verschwindet während Drag + Idle ─╮ */
       .auto-fade {
         opacity: 1;
-        transition: opacity 0.45s ease;
+        transition: opacity 0.4s ease;
       }
       body.idle .auto-fade { opacity: 0.18; }
-      /* Während Folie gedreht wird → fast komplett transparent für freie Sicht */
-      body.dragging .auto-fade { opacity: 0.04; pointer-events: none; }
+      /* Während Folie gedreht wird → 100% unsichtbar für freie Sicht */
+      body.dragging .auto-fade {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+      }
       /* Drawer voll sichtbar bei Mouse-Hover (überschreibt fade) */
-      .drawer:hover { opacity: 1 !important; pointer-events: auto !important; }
+      .drawer:hover { opacity: 1 !important; pointer-events: auto !important; visibility: visible !important; }
 
       @media (max-width: 720px) {
         .brand { font-size: 18px; left: 22px; top: 22px; letter-spacing: 0.12em; }
@@ -485,7 +489,7 @@
     </div>
 
     <!-- Brand-Mark, Editorial-Serif -->
-    <div class="brand auto-fade">
+    <div class="brand">
       <img src="./brand/ballerstaedt-logo-dark.png" alt="Ballerstaedt Siegelsysteme" />
     </div>
 
