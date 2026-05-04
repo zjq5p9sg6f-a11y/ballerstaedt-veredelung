@@ -2349,7 +2349,7 @@ function updateInfoLabel() {
     if (state.embossingMode) {
       veredel = " · Blindprägung";
     } else if (isHotFoil) {
-      veredel = ` · Heißfolie ${mat.label.replace("-Lack", "")}`;
+      veredel = ` · Logo ${mat.label}`;
     } else {
       veredel = " · Druck";
     }
