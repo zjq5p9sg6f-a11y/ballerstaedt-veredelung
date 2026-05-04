@@ -176,35 +176,6 @@ function buildBacoBond(diameterMm, material) {
   group.add(liner);
   return group;
 }
-function buildRollenware(diameterMm, material) {
-  const r = diameterMm / 2 * MM;
-  const len = r * 4;
-  const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
-  const cylGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CylinderGeometry(r * 0.85, r * 0.85, r * 0.6, 96, 1, true);
-  const cyl = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(cylGeo, material);
-  cyl.rotation.z = Math.PI / 2;
-  cyl.position.set(-len * 0.35, r * 0.3, 0);
-  group.add(cyl);
-  const coreMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshStandardMaterial({
-    color: 11767389,
-    metalness: 0.1,
-    roughness: 0.9
-  });
-  const cap1 = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.85, 64), coreMat);
-  cap1.rotation.y = Math.PI / 2;
-  cap1.position.set(-len * 0.35 + r * 0.301, r * 0.3, 0);
-  group.add(cap1);
-  const cap2 = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.85, 64), coreMat);
-  cap2.rotation.y = -Math.PI / 2;
-  cap2.position.set(-len * 0.35 - r * 0.301, r * 0.3, 0);
-  group.add(cap2);
-  const planeGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PlaneGeometry(len * 0.8, r * 0.6);
-  const plane = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(planeGeo, material);
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.set(len * 0.05, 0, 0);
-  group.add(plane);
-  return group;
-}
 function buildSealFoil(opts) {
   const { shape, diameterMm, material } = opts;
   switch (shape) {
@@ -224,8 +195,6 @@ function buildSealFoil(opts) {
       return buildInduktion(diameterMm, material);
     case "baco-bond":
       return buildBacoBond(diameterMm, material);
-    case "rollenware":
-      return buildRollenware(diameterMm, material);
     default:
       return buildFlatFoil(rondeGeo(diameterMm, false), material);
   }
@@ -240,7 +209,6 @@ function normalizeShape(raw) {
     "verformte-ronde",
     "induktionssiegel",
     "baco-bond",
-    "rollenware",
     "kappe",
     "ronde"
   ];
@@ -248,7 +216,6 @@ function normalizeShape(raw) {
     if (s === id) return id;
   }
   if (s.includes("psl") || s.includes("baco bond") || s.includes("baco-bond")) return "baco-bond";
-  if (s.includes("rollenware") || s.includes("rolle")) return "rollenware";
   if (s.includes("ir") || s.includes("induktion")) return "induktionssiegel";
   if (s.includes("verformt") && s.includes("lasche")) return "verformt-lasche";
   if (s.includes("verformt") || s.includes("oval")) return "verformte-ronde";

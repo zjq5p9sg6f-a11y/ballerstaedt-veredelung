@@ -2019,16 +2019,15 @@ const SHAPES = [
   { id: "verformt-lasche", label: "Verformt · Lasche", code: "AL" },
   { id: "verformte-ronde", label: "Verformt", code: "—" },
   { id: "induktionssiegel", label: "Induktion", code: "IR" },
-  { id: "baco-bond", label: "BaCo Bond", code: "PSL" },
-  { id: "rollenware", label: "Rollenware", code: "—" }
+  { id: "baco-bond", label: "BaCo Bond", code: "PSL" }
 ];
 const MATERIALS = [
   { id: "alu_g", label: "Alu glänzend", color: 14211288, metalness: 0.92, roughness: 0.18, ui: "#d8d8d8" },
   { id: "alu_m", label: "Alu matt", color: 12434877, metalness: 0.55, roughness: 0.6, ui: "#bdbdbd" },
   { id: "kunst", label: "Kunststoff", color: 16185076, metalness: 0, roughness: 0.65, ui: "#f6f6f4" },
-  { id: "gold", label: "Heißfolie Gold", color: 13938487, metalness: 1, roughness: 0.15, ui: "#d4af37" },
-  { id: "silber", label: "Heißfolie Silber", color: 13620957, metalness: 1, roughness: 0.1, ui: "#cfd6dd" },
-  { id: "kupfer", label: "Heißfolie Kupfer", color: 12088115, metalness: 1, roughness: 0.18, ui: "#b87333" }
+  { id: "gold", label: "Gold-Lack", color: 13938487, metalness: 1, roughness: 0.15, ui: "#d4af37" },
+  { id: "silber", label: "Silber-Lack", color: 13620957, metalness: 1, roughness: 0.1, ui: "#cfd6dd" },
+  { id: "kupfer", label: "Kupfer-Lack", color: 12088115, metalness: 1, roughness: 0.18, ui: "#b87333" }
 ];
 const state = {
   shape: "ronde",
@@ -2359,8 +2358,7 @@ const shapeIcons = {
   "verformt-lasche": `<ellipse cx="12" cy="14" rx="10" ry="6" fill="currentColor" opacity="0.85"/><path d="M21 12 l5 2 -5 2 z" fill="currentColor" opacity="0.85"/>`,
   "verformte-ronde": `<ellipse cx="14" cy="14" rx="11" ry="7" fill="currentColor" opacity="0.85"/>`,
   "induktionssiegel": `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
-  "baco-bond": `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.85"/><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>`,
-  "rollenware": `<rect x="3" y="11" width="22" height="6" rx="2" fill="currentColor" opacity="0.85"/><circle cx="6" cy="14" r="3" fill="currentColor"/>`
+  "baco-bond": `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.85"/><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>`
 };
 SHAPES.forEach((s) => {
   const btn = document.createElement("button");
