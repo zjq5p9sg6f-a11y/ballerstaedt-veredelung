@@ -1,20 +1,60 @@
-import { j as jsxRuntimeExports } from './jsx-runtime-dGY4lsZt.js';
 import { a as index_cjs, b as ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__ } from './ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
-import { b as ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__-D7cIg9rU.js';
-import './_commonjsHelpers-B85MJLTf.js';
+
+var jsxRuntime = {exports: {}};
+
+var reactJsxRuntime_production = {};
+
+/**
+ * @license React
+ * react-jsx-runtime.production.js
+ *
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
+  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+function jsxProd(type, config, maybeKey) {
+  var key = null;
+  undefined !== maybeKey && (key = "" + maybeKey);
+  undefined !== config.key && (key = "" + config.key);
+  if ("key" in config) {
+    maybeKey = {};
+    for (var propName in config)
+      "key" !== propName && (maybeKey[propName] = config[propName]);
+  } else maybeKey = config;
+  config = maybeKey.ref;
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: type,
+    key: key,
+    ref: undefined !== config ? config : null,
+    props: maybeKey
+  };
+}
+reactJsxRuntime_production.Fragment = REACT_FRAGMENT_TYPE;
+reactJsxRuntime_production.jsx = jsxProd;
+reactJsxRuntime_production.jsxs = jsxProd;
+
+{
+  jsxRuntime.exports = reactJsxRuntime_production;
+}
+
+var jsxRuntimeExports = jsxRuntime.exports;
 
 // dev uses dynamic import to separate chunks
     
-    const {loadShare: loadShare$1} = index_cjs;
-    const {initPromise: initPromise$1} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
-    const res$1 = initPromise$1.then(_ => loadShare$1("@mui/material", {
+    const {loadShare: loadShare$2} = index_cjs;
+    const {initPromise: initPromise$2} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
+    const res$2 = initPromise$2.then(_ => loadShare$2("@mui/material", {
     customShareInfo: {shareConfig:{
       singleton: true,
       strictVersion: false,
       requiredVersion: "^7.1.1"
     }}}));
-    const exportModule$1 = await res$1.then(factory => factory());
-    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__ = exportModule$1;
+    const exportModule$2 = await res$2.then(factory => factory());
+    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__ = exportModule$2;
 
 const LogoUploader = () => (props) => {
   const dataUrl = props.selection?.data?.dataUrl;
@@ -71,6 +111,19 @@ const LogoUploader = () => (props) => {
     !dataUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__.Typography, { variant: "caption", color: "text.secondary", children: "PNG / JPG / SVG · transparenter Hintergrund empfohlen" })
   ] });
 };
+
+// dev uses dynamic import to separate chunks
+    
+    const {loadShare: loadShare$1} = index_cjs;
+    const {initPromise: initPromise$1} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
+    const res$1 = initPromise$1.then(_ => loadShare$1("react", {
+    customShareInfo: {shareConfig:{
+      singleton: true,
+      strictVersion: false,
+      requiredVersion: "19.1.1"
+    }}}));
+    const exportModule$1 = await res$1.then(factory => factory());
+    var ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__ = exportModule$1;
 
 // dev uses dynamic import to separate chunks
     
@@ -217,7 +270,7 @@ async function dataUrlToDiffuseTexture(dataUrl) {
   return tex;
 }
 
-const screenshot = "/assets/Image-lYiF6YAQ.png";
+const screenshot = ""+new URL('Image-lYiF6YAQ.png', import.meta.url).href+"";
 
 const extractImageUrl = (val) => {
   if (!val) return undefined;
