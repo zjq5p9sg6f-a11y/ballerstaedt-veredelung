@@ -6076,13 +6076,11 @@ function animate() {
     drawerBody.appendChild(praegungSection);
   }
   const praegungRowEl = document.getElementById("praegungRow");
-  const patternBulletColor = "#888";
   PRAEGUNGEN.forEach((p) => {
     const btn = document.createElement("button");
     btn.className = "chip" + (p.id === state.praegung ? " active" : "");
     btn.dataset.id = p.id;
-    const swatchColor = p.id === state.praegung ? "#fff" : patternBulletColor;
-    btn.innerHTML = `<span class="swatch" style="background:${swatchColor}"></span>${p.label}`;
+    btn.textContent = p.label;
     if (p.id === state.praegung) {
       btn.style.background = "var(--magenta)";
       btn.style.borderColor = "var(--magenta)";
@@ -6097,8 +6095,6 @@ function animate() {
         el.style.background = active ? "var(--magenta)" : "";
         el.style.borderColor = active ? "var(--magenta)" : "";
         el.style.color = active ? "#fff" : "";
-        const sw = el.querySelector(".swatch");
-        if (sw) sw.style.background = active ? "#fff" : patternBulletColor;
       });
       rebuildFoil();
     };
