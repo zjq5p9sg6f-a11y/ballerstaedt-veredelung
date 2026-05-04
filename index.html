@@ -234,6 +234,70 @@
         text-align: right;
       }
       .footer-info code { font-family: "SF Mono", monospace; color: var(--text-2); }
+
+      /* === Passwort-Gate === */
+      #authGate {
+        position: fixed; inset: 0; z-index: 9999;
+        background: radial-gradient(circle at 50% 30%, #1a1a1c 0%, #050507 70%);
+        display: flex; align-items: center; justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      }
+      #authGate.hidden { display: none; }
+      .auth-card {
+        background: rgba(22,22,26,0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(212,175,55,0.25);
+        border-radius: 14px;
+        padding: 36px 40px 32px;
+        width: min(420px, 90vw);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.05);
+      }
+      .auth-card h2 {
+        font-size: 18px; font-weight: 600; color: #f4f4f6;
+        letter-spacing: -0.2px; margin-bottom: 4px;
+      }
+      .auth-card p.sub {
+        font-size: 13px; color: #888; margin-bottom: 24px;
+      }
+      .auth-row { display: flex; gap: 8px; }
+      .auth-card input[type="password"] {
+        flex: 1;
+        background: #0e0e10; color: #f4f4f6;
+        border: 1px solid #2a2a30;
+        border-radius: 8px;
+        padding: 11px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .auth-card input[type="password"]:focus {
+        border-color: #d4af37;
+      }
+      .auth-card button {
+        background: #d4af37; color: #1a1a1a;
+        border: none; border-radius: 8px;
+        padding: 11px 20px;
+        font-size: 13px; font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.15s;
+      }
+      .auth-card button:hover { background: #e9c66a; }
+      .auth-card .err {
+        margin-top: 10px;
+        font-size: 12px; color: #ff6b6b;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .auth-card .err.show { opacity: 1; }
+      .auth-card .badge-row {
+        margin-top: 24px; padding-top: 20px;
+        border-top: 1px solid #2a2a30;
+        font-size: 11px; color: #6f6f78;
+        line-height: 1.6;
+      }
+      .auth-card .badge-row b { color: #b0b0b8; font-weight: 600; }
     </style>
     <script type="importmap">
       {
@@ -246,6 +310,51 @@
     <script type="module" crossorigin src="./assets/index--tkzN6iX.js"></script>
   </head>
   <body>
+    <div id="authGate">
+      <div class="auth-card">
+        <h2>Ballerstaedt Veredelungs-Mockup</h2>
+        <p class="sub">Geschützter Zugang · interne Vorschau</p>
+        <form id="authForm" autocomplete="off">
+          <div class="auth-row">
+            <input type="password" id="authPwd" placeholder="Passwort" autofocus />
+            <button type="submit">Zugang</button>
+          </div>
+          <div class="err" id="authErr">Falsches Passwort</div>
+        </form>
+        <div class="badge-row">
+          <b>K3-Plugin · Phase 0</b><br/>
+          BaCo-Veredelungs-Konfigurator · 8 Formen · 9 Strukturprägungen · Logo-Upload
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        const KEY = "baco-veredelung-auth-2026";
+        const PWD = "Baco";  // ← Soft-Gate, kein echter Schutz
+        const gate = document.getElementById("authGate");
+        const err = document.getElementById("authErr");
+        const form = document.getElementById("authForm");
+        const pwd = document.getElementById("authPwd");
+
+        // Persistenter Login via sessionStorage (überlebt Tab-Reload, nicht Tab-Schließen)
+        if (sessionStorage.getItem(KEY) === "ok") {
+          gate.classList.add("hidden");
+        }
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (pwd.value === PWD) {
+            sessionStorage.setItem(KEY, "ok");
+            gate.classList.add("hidden");
+            err.classList.remove("show");
+          } else {
+            err.classList.add("show");
+            pwd.value = "";
+            pwd.focus();
+          }
+        });
+      })();
+    </script>
     <header>
       <div style="display: flex; align-items: baseline;">
         <h1>Ballerstaedt Veredelungs-Mockup</h1>
