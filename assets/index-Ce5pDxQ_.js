@@ -2050,6 +2050,15 @@ const scene = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Sc
 const camera = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PerspectiveCamera(34, 1, 0.01, 100);
 camera.position.set(0, 0.55, 2.6);
 const pmrem = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PMREMGenerator(renderer);
+new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.TextureLoader().load(
+  "https://oc-k3.s3.eu-central-1.amazonaws.com/libs/3d/environments/apartment.hdr",
+  () => {
+  },
+  undefined,
+  () => {
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  }
+);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.add(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.AmbientLight(16777215, 0.25));
 const keyLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16777215, 1.6);
