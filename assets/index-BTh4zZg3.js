@@ -6056,8 +6056,8 @@ function animate() {
   composer.render();
 }
 (function setupPraegungPicker() {
-  const aside = document.querySelector("aside.controls");
-  if (!aside || document.getElementById("praegungRow")) return;
+  const drawerBody = document.querySelector(".drawer-body");
+  if (!drawerBody || document.getElementById("praegungRow")) return;
   const logoBtn = document.getElementById("logoBtn");
   const logoGroup = logoBtn ? logoBtn.closest(".group") : null;
   const praegungSection = document.createElement("div");
@@ -6065,14 +6065,13 @@ function animate() {
   praegungSection.innerHTML = `
     <div class="group-title">
       <span>Strukturprägung</span>
-      <span class="value" id="praegungLabel">Glatt</span>
     </div>
     <div class="chip-row" id="praegungRow"></div>
   `;
-  if (logoGroup && logoGroup.parentElement === aside) {
-    aside.insertBefore(praegungSection, logoGroup);
+  if (logoGroup && logoGroup.parentElement === drawerBody) {
+    drawerBody.insertBefore(praegungSection, logoGroup);
   } else {
-    aside.appendChild(praegungSection);
+    drawerBody.appendChild(praegungSection);
   }
   const praegungRowEl = document.getElementById("praegungRow");
   const patternBulletColor = "#888";
@@ -6099,8 +6098,6 @@ function animate() {
         const sw = el.querySelector(".swatch");
         if (sw) sw.style.background = active ? "#fff" : patternBulletColor;
       });
-      const lbl = document.getElementById("praegungLabel");
-      if (lbl) lbl.textContent = p.label;
       rebuildFoil();
     };
     praegungRowEl.appendChild(btn);
