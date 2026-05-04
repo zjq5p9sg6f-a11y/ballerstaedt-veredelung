@@ -645,15 +645,17 @@ const dynamicSealFoil = {
   component: SealFoilDynamic,
   propsDialog: {
     basic: { type: "basic" },
-    shape: {},
-    diameterMm: {},
-    materialPreset: {},
-    metalness: {},
-    roughness: {},
-    embossingMode: {},
-    embossStrength: {},
-    printLogoUrl: { type: "image" },
-    embossingLogoUrl: { type: "image" }
+    // Variable-Selektor-Dropdown im Admin-UI · saubere Bindung statt Formel-Editor
+    shape: { type: "variable", label: "Form", allowedTypes: ["list"] },
+    materialPreset: { type: "variable", label: "Material", allowedTypes: ["list"] },
+    embossingMode: { type: "variable", label: "Prägung", allowedTypes: ["list", "boolean"] },
+    printLogoUrl: { type: "variable", label: "Druck-Logo", allowedTypes: ["image", "upload"] },
+    embossingLogoUrl: { type: "variable", label: "Prägung-Logo", allowedTypes: ["image", "upload"] },
+    // Numerische Direkt-Properties (Expressions OK weil keine Variable-Bindung nötig)
+    diameterMm: { type: "expression", label: "Durchmesser (mm)" },
+    metalness: { type: "expression", label: "Metallizität" },
+    roughness: { type: "expression", label: "Rauheit" },
+    embossStrength: { type: "expression", label: "Prägetiefe" }
   },
   defaultProps: {
     // K3 verlangt numerische Formel-Ergebnisse — alle Defaults als Number.
