@@ -261,9 +261,9 @@ const MATERIAL_PRESETS = [
   { id: "alu_g", label: "Alu glänzend", color: 14211288, metalness: 0.92, roughness: 0.18 },
   { id: "alu_m", label: "Alu matt", color: 12434877, metalness: 0.55, roughness: 0.6 },
   { id: "kunst", label: "Kunststoff", color: 16185076, metalness: 0, roughness: 0.65 },
-  { id: "gold", label: "Heißfolie Gold", color: 13938487, metalness: 1, roughness: 0.15 },
-  { id: "silber", label: "Heißfolie Silber", color: 13620957, metalness: 1, roughness: 0.1 },
-  { id: "kupfer", label: "Heißfolie Kupfer", color: 12088115, metalness: 1, roughness: 0.18 }
+  { id: "gold", label: "Gold-Lack", color: 13938487, metalness: 1, roughness: 0.15 },
+  { id: "silber", label: "Silber-Lack", color: 13620957, metalness: 1, roughness: 0.1 },
+  { id: "kupfer", label: "Kupfer-Lack", color: 12088115, metalness: 1, roughness: 0.18 }
 ];
 function normalizeMaterial(raw) {
   if (!raw) return MATERIAL_PRESETS[0];
