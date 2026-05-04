@@ -5354,131 +5354,7 @@ scene.add(fillReflector);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.VSMShadowMap;
 renderer.toneMappingExposure = 0.78;
-scene.background = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(5);
-function buildStarField() {
-  const N = 9e3;
-  const pos = new Float32Array(N * 3);
-  const col = new Float32Array(N * 3);
-  const siz = new Float32Array(N);
-  for (let i = 0; i < N; i++) {
-    const inBand = Math.random() < 0.6;
-    let theta = Math.random() * Math.PI * 2;
-    let phi;
-    if (inBand) {
-      const u = Math.random() + Math.random() + Math.random() - 1.5;
-      phi = Math.PI / 2 + u * 0.35;
-    } else {
-      phi = Math.acos(2 * Math.random() - 1);
-    }
-    const r = 70 + Math.random() * 30;
-    pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-    pos[i * 3 + 1] = r * Math.cos(phi);
-    pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
-    const t = Math.random();
-    if (t < 0.7) {
-      col[i * 3] = 1;
-      col[i * 3 + 1] = 0.97 + Math.random() * 0.03;
-      col[i * 3 + 2] = 0.92 + Math.random() * 0.06;
-    } else if (t < 0.9) {
-      col[i * 3] = 0.78 + Math.random() * 0.1;
-      col[i * 3 + 1] = 0.85 + Math.random() * 0.1;
-      col[i * 3 + 2] = 1;
-    } else {
-      col[i * 3] = 1;
-      col[i * 3 + 1] = 0.7 + Math.random() * 0.15;
-      col[i * 3 + 2] = 0.5 + Math.random() * 0.15;
-    }
-    siz[i] = 0.5 + Math.pow(Math.random(), 5) * 5;
-  }
-  const g = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferGeometry();
-  g.setAttribute("position", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(pos, 3));
-  g.setAttribute("color", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(col, 3));
-  g.setAttribute("size", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(siz, 1));
-  const m = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uPxRatio: { value: renderer.getPixelRatio() } },
-    vertexShader: `
-      attribute float size;
-      attribute vec3 color;
-      varying vec3 vColor;
-      uniform float uTime;
-      uniform float uPxRatio;
-      void main() {
-        vColor = color;
-        vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        float twinkle = 0.88 + 0.12 * sin(uTime * 1.5 + size * 19.0);
-        // CLAMPED · keine Mega-Rectangles bei nahen Stars
-        float ps = size * twinkle * (180.0 / max(-mv.z, 1.0));
-        gl_PointSize = clamp(ps, 0.5, 12.0) * uPxRatio;
-        gl_Position = projectionMatrix * mv;
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vColor;
-      void main() {
-        vec2 c = gl_PointCoord - 0.5;
-        float d = length(c);
-        if (d > 0.5) discard;
-        // Realistische Stern-Helligkeitskurve (Gauss)
-        float a = exp(-d * d * 18.0);
-        gl_FragColor = vec4(vColor * (0.4 + a * 1.4), a);
-      }
-    `,
-    vertexColors: true,
-    transparent: true,
-    depthWrite: false,
-    blending: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.AdditiveBlending
-  });
-  return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Points(g, m);
-}
-const stars = buildStarField();
-scene.add(stars);
-function buildGalacticHaze() {
-  const geo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SphereGeometry(55, 64, 32);
-  const mat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: `
-      varying vec3 vWorldPos;
-      void main() {
-        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vWorldPos;
-      // simple noise
-      float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 54.227))) * 43758.5453); }
-      float noise(vec3 p) {
-        vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.0-2.0*f);
-        return mix(
-          mix(mix(hash(i), hash(i+vec3(1,0,0)), f.x), mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)), f.x), f.y),
-          mix(mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)), f.x), mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)), f.x), f.y),
-          f.z
-        );
-      }
-      float fbm(vec3 p) {
-        float s = 0.0; float a = 0.5;
-        for (int i = 0; i < 4; i++) { s += a * noise(p); p *= 2.0; a *= 0.5; }
-        return s;
-      }
-      void main() {
-        vec3 dir = normalize(vWorldPos);
-        // Konzentriert entlang galactic plane (y ~ 0)
-        float bandStrength = exp(-dir.y * dir.y * 25.0);
-        float n = fbm(dir * 6.0);
-        float density = bandStrength * smoothstep(0.35, 0.85, n);
-        // Realistische Milky-Way-Farben: warm-weiß mit leicht bläulichem Halo
-        vec3 col = mix(vec3(0.18, 0.20, 0.28), vec3(0.85, 0.78, 0.62), density * 0.5);
-        col *= density * 0.45;  // dezent, nicht überstrahlend
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-    side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BackSide,
-    depthWrite: false
-  });
-  return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(geo, mat);
-}
-const galacticHaze = buildGalacticHaze();
-scene.add(galacticHaze);
+scene.background = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(0);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.07;
@@ -6177,9 +6053,6 @@ function animate() {
   const t = clock.getElapsedTime();
   controls.update();
   cinematicPass.uniforms.uTime.value = t;
-  stars.material.uniforms.uTime.value = t;
-  galacticHaze.rotation.y = t * 8e-3;
-  stars.rotation.y = t * 8e-3;
   composer.render();
 }
 (function setupPraegungPicker() {
