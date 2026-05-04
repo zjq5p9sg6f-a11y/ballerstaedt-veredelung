@@ -1,5 +1,5 @@
-import { b as ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__-BZ_dI_FZ.js';
 import './ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
+import { b as ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__-BZ_dI_FZ.js';
 
 /**
  * Fires when the camera has been transformed by the controls.
@@ -2011,541 +2011,478 @@ function createAreaLightMaterial( intensity ) {
 
 }
 
-// ============================================================
-      //  CATALOG · BaCo-konforme Schemata
-      // ============================================================
-      const SHAPES = [
-        { id: "ronde",            label: "Ronde",            code: "R" },
-        { id: "ronde-lasche",     label: "Ronde · Lasche",   code: "AR" },
-        { id: "kappe",            label: "Kappe",            code: "K" },
-        { id: "kappe-lasche",     label: "Kappe · Lasche",   code: "AK" },
-        { id: "verformt-lasche",  label: "Verformt · Lasche",code: "AL" },
-        { id: "verformte-ronde",  label: "Verformt",         code: "—" },
-        { id: "induktionssiegel", label: "Induktion",        code: "IR" },
-        { id: "baco-bond",        label: "BaCo Bond",        code: "PSL" },
-        { id: "rollenware",       label: "Rollenware",       code: "—" },
-      ];
-
-      const MATERIALS = [
-        { id: "alu_g",     label: "Alu glänzend", color: 0xd8d8d8, metalness: 0.92, roughness: 0.18, ui: "#d8d8d8" },
-        { id: "alu_m",     label: "Alu matt",     color: 0xbdbdbd, metalness: 0.55, roughness: 0.6,  ui: "#bdbdbd" },
-        { id: "kunst",     label: "Kunststoff",   color: 0xf6f6f4, metalness: 0.0,  roughness: 0.65, ui: "#f6f6f4" },
-        { id: "gold",      label: "Heißfolie Gold",   color: 0xd4af37, metalness: 1.0, roughness: 0.15, ui: "#d4af37" },
-        { id: "silber",    label: "Heißfolie Silber", color: 0xcfd6dd, metalness: 1.0, roughness: 0.1,  ui: "#cfd6dd" },
-        { id: "kupfer",    label: "Heißfolie Kupfer", color: 0xb87333, metalness: 1.0, roughness: 0.18, ui: "#b87333" },
-      ];
-
-      // ============================================================
-      //  STATE
-      // ============================================================
-      const state = {
-        shape: "ronde",
-        diameter: 95,
-        material: "alu_g",
-        logoDataUrl: null,
-        embossingMode: false,
-        embossStrength: 4,
-      };
-
-      let foilGroup = null;
-      let logoDiffuseTexture = null;
-      let logoNormalMap = null;
-
-      // ============================================================
-      //  THREE.JS SETUP
-      // ============================================================
-      const canvas = document.getElementById("canvas");
-      const renderer = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.WebGLRenderer({ canvas, antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.toneMapping = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.0;
-
-      const scene = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Scene();
-      const camera = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PerspectiveCamera(34, 1, 0.01, 100);
-      camera.position.set(0, 0.55, 2.6);
-
-      const pmrem = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PMREMGenerator(renderer);
-      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-
-      scene.add(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.AmbientLight(0xffffff, 0.25));
-      const keyLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(0xffffff, 1.6);
-      keyLight.position.set(2.5, 4, 3);
-      scene.add(keyLight);
-      const fillLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(0xffe4b5, 0.4);
-      fillLight.position.set(-3, 1, -2);
-      scene.add(fillLight);
-
-      // Reflection floor
-      const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(2.4, 64);
-      const floorMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshStandardMaterial({
-        color: 0x1a1a1c, metalness: 0.6, roughness: 0.4,
-      });
-      const floor = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(floorGeo, floorMat);
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -0.05;
-      scene.add(floor);
-
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.06;
-      controls.minPolarAngle = 0.15;
-      controls.maxPolarAngle = Math.PI / 2.05;
-      controls.enablePan = false;
-      controls.minDistance = 1.5;
-      controls.maxDistance = 5;
-      controls.target.set(0, 0.05, 0);
-
-      // ============================================================
-      //  GEOMETRY BUILDERS  (9 BaCo-Formen)
-      // ============================================================
-      const MM = 0.01;  // 1 mm = 0.01 scene-units
-
-      function laschePath(shape, edgeR, side = "right") {
-        // Trapez-Lasche, 18mm × 14mm, gerundete Außenkante
-        const w = 14 * MM, h = 18 * MM;
-        const sx = side === "right" ? edgeR : -edgeR;
-        const dir = side === "right" ? 1 : -1;
-        shape.moveTo(sx, -0.14 / 2);
-        shape.lineTo(sx + dir * h * 0.6, -0.14 / 2 * 0.85);
-        shape.quadraticCurveTo(sx + dir * h, 0, sx + dir * h * 0.6, w / 2 * 0.85);
-        shape.lineTo(sx, w / 2);
-      }
-
-      function rondeShape(diameter, withLasche = false) {
-        const r = (diameter / 2) * MM;
-        const shape = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Shape();
-        const segs = 96;
-        if (withLasche) {
-          // Ring with lasche extension
-          const angleStart = Math.asin((14 * MM / 2) / r) || 0.08;
-          shape.absarc(0, 0, r, angleStart, 2 * Math.PI - angleStart, false);
-          laschePath(shape, r * Math.cos(angleStart), "right");
-          shape.lineTo(r * Math.cos(angleStart), r * Math.sin(angleStart) * -1);
-        } else {
-          shape.absarc(0, 0, r, 0, Math.PI * 2, false);
-        }
-        return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShapeGeometry(shape, segs);
-      }
-
-      function ovalShape(diameter, withLasche = false) {
-        const w = (diameter / 2) * MM;
-        const h = (diameter / 2) * MM * 0.7;
-        const shape = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Shape();
-        if (withLasche) {
-          const angleStart = 0.18;
-          shape.absellipse(0, 0, w, h, angleStart, 2 * Math.PI - angleStart, false, 0);
-          laschePath(shape, w * Math.cos(angleStart), "right");
-          shape.lineTo(w * Math.cos(angleStart), h * Math.sin(angleStart) * -1);
-        } else {
-          shape.absellipse(0, 0, w, h, 0, Math.PI * 2, false, 0);
-        }
-        return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShapeGeometry(shape, 96);
-      }
-
-      function buildFlatFoil(geometry, material) {
-        const mesh = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(geometry, material);
-        mesh.rotation.x = -Math.PI / 2;
-        mesh.position.y = 0;
-        const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
-        group.add(mesh);
-        return group;
-      }
-
-      function buildKappe(diameter, material, withLasche = false) {
-        const r = (diameter / 2) * MM;
-        const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
-        // Kuppel: leichter Half-Sphere abgeflacht
-        const sphereGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SphereGeometry(r, 96, 32, 0, Math.PI * 2, 0, Math.PI / 3.5);
-        const sphere = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(sphereGeo, material);
-        sphere.scale.y = 0.35;  // flachgedrückt
-        group.add(sphere);
-        // Boden-Disc
-        const baseGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96);
-        const base = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(baseGeo, material);
-        base.rotation.x = -Math.PI / 2;
-        group.add(base);
-        if (withLasche) {
-          const laschenShape = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Shape();
-          laschePath(laschenShape, r, "right");
-          laschenShape.lineTo(r, -7 * MM);  // close
-          const laschenGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShapeGeometry(laschenShape, 16);
-          const lasche = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(laschenGeo, material);
-          lasche.rotation.x = -Math.PI / 2;
-          group.add(lasche);
-        }
-        return group;
-      }
-
-      function buildInduktionssiegel(diameter, material) {
-        const r = (diameter / 2) * MM;
-        const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
-        // Disc
-        const disc = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96), material);
-        disc.rotation.x = -Math.PI / 2;
-        group.add(disc);
-        // Innerer Ring (slightly raised) for inductive coil
-        const innerR = r * 0.7;
-        const ringGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.RingGeometry(innerR * 0.92, innerR, 96);
-        const ringMat = material.clone();
-        ringMat.color = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(0x8a8a8a);
-        ringMat.metalness = Math.min(material.metalness + 0.05, 1);
-        ringMat.roughness = Math.max(material.roughness - 0.1, 0.05);
-        const ring = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(ringGeo, ringMat);
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.001;
-        group.add(ring);
-        return group;
-      }
-
-      function buildBacoBond(diameter, material) {
-        const r = (diameter / 2) * MM;
-        const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
-        // Top: Alu/Material disc
-        const top = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96), material);
-        top.rotation.x = -Math.PI / 2;
-        top.position.y = 0.008;
-        group.add(top);
-        // Below: PSL liner (warmer color, soft)
-        const linerMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
-          color: 0xf0e8d8,
-          metalness: 0,
-          roughness: 0.85,
-          side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DoubleSide,
-        });
-        const liner = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.97, 96), linerMat);
-        liner.rotation.x = -Math.PI / 2;
-        liner.position.y = 0.001;
-        group.add(liner);
-        return group;
-      }
-
-      function buildRollenware(diameter, material) {
-        const r = (diameter / 2) * MM;
-        const len = r * 4;
-        const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
-        // Rolle (Cylinder)
-        const cylGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CylinderGeometry(r * 0.85, r * 0.85, r * 0.6, 96, 1, true);
-        const cyl = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(cylGeo, material);
-        cyl.rotation.z = Math.PI / 2;
-        cyl.position.set(-len * 0.35, r * 0.3, 0);
-        group.add(cyl);
-        // Cylinder-Endkappen (innerer Hülsenkern)
-        const coreMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshStandardMaterial({ color: 0xb38e5d, metalness: 0.1, roughness: 0.9 });
-        const cap1 = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.85, 64), coreMat);
-        cap1.rotation.y = Math.PI / 2;
-        cap1.position.set(-len * 0.35 + r * 0.301, r * 0.3, 0);
-        group.add(cap1);
-        const cap2 = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.85, 64), coreMat);
-        cap2.rotation.y = -Math.PI / 2;
-        cap2.position.set(-len * 0.35 - r * 0.301, r * 0.3, 0);
-        group.add(cap2);
-        // Abrollende Folie (PlaneGeometry)
-        const planeGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PlaneGeometry(len * 0.8, r * 0.6);
-        const plane = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(planeGeo, material);
-        plane.rotation.x = -Math.PI / 2;
-        plane.position.set(len * 0.05, 0, 0);
-        group.add(plane);
-        return group;
-      }
-
-      // ============================================================
-      //  MATERIAL FACTORY
-      // ============================================================
-      function makeMaterial(matConfig) {
-        const m = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
-          color: new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(matConfig.color),
-          metalness: matConfig.metalness,
-          roughness: matConfig.roughness,
-          side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DoubleSide,
-          envMapIntensity: 1.4,
-        });
-        if (logoDiffuseTexture) m.map = logoDiffuseTexture;
-        if (logoNormalMap) m.normalMap = logoNormalMap;
-        return m;
-      }
-
-      // ============================================================
-      //  REBUILD FOIL
-      // ============================================================
-      function disposeGroup(group) {
-        group.traverse((c) => {
-          if (c.geometry) c.geometry.dispose();
-          if (c.material) {
-            if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose());
-            else c.material.dispose();
-          }
-        });
-      }
-
-      function rebuildFoil() {
-        if (foilGroup) {
-          scene.remove(foilGroup);
-          disposeGroup(foilGroup);
-        }
-
-        const matConfig = MATERIALS.find((m) => m.id === state.material);
-        const material = makeMaterial(matConfig);
-        const d = state.diameter;
-
-        switch (state.shape) {
-          case "ronde":            foilGroup = buildFlatFoil(rondeShape(d, false), material); break;
-          case "ronde-lasche":     foilGroup = buildFlatFoil(rondeShape(d, true),  material); break;
-          case "kappe":            foilGroup = buildKappe(d, material, false); break;
-          case "kappe-lasche":     foilGroup = buildKappe(d, material, true); break;
-          case "verformt-lasche":  foilGroup = buildFlatFoil(ovalShape(d, true),   material); break;
-          case "verformte-ronde":  foilGroup = buildFlatFoil(ovalShape(d, false),  material); break;
-          case "induktionssiegel": foilGroup = buildInduktionssiegel(d, material); break;
-          case "baco-bond":        foilGroup = buildBacoBond(d, material); break;
-          case "rollenware":       foilGroup = buildRollenware(d, material); break;
-          default:                 foilGroup = buildFlatFoil(rondeShape(d, false), material); break;
-        }
-
-        scene.add(foilGroup);
-        updateInfoLabel();
-      }
-
-      function updateInfoLabel() {
-        const shape = SHAPES.find((s) => s.id === state.shape);
-        const mat = MATERIALS.find((m) => m.id === state.material);
-        const veredel = state.logoDataUrl
-          ? state.embossingMode
-            ? " · Blindprägung"
-            : " · Druck"
-          : "";
-        document.getElementById("canvasInfo").innerHTML =
-          `<b>${shape.label}</b> ${shape.code !== "—" ? `[${shape.code}]` : ""} · Ø${state.diameter}mm · ${mat.label}${veredel}`;
-      }
-
-      // ============================================================
-      //  SOBEL FILTER · Logo → Normal Map
-      // ============================================================
-      function imageToNormalMapCanvas(img, strength = 4) {
-        const w = img.width, h = img.height;
-        const reader = document.createElement("canvas");
-        reader.width = w; reader.height = h;
-        const rctx = reader.getContext("2d");
-        rctx.drawImage(img, 0, 0);
-        const src = rctx.getImageData(0, 0, w, h).data;
-
-        const height = new Float32Array(w * h);
-        for (let i = 0; i < w * h; i++) {
-          const r = src[i * 4], g = src[i * 4 + 1], b = src[i * 4 + 2];
-          const a = src[i * 4 + 3] / 255;
-          height[i] = ((0.299 * r + 0.587 * g + 0.114 * b) / 255) * a;
-        }
-
-        const out = document.createElement("canvas");
-        out.width = w; out.height = h;
-        const octx = out.getContext("2d");
-        const img2 = octx.createImageData(w, h);
-
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const i = y * w + x;
-            const x0 = x === 0 ? 0 : x - 1;
-            const x1 = x === w - 1 ? w - 1 : x + 1;
-            const y0 = y === 0 ? 0 : y - 1;
-            const y1 = y === h - 1 ? h - 1 : y + 1;
-            const tl = height[y0 * w + x0], tc = height[y0 * w + x], tr = height[y0 * w + x1];
-            const ml = height[y * w + x0], mr = height[y * w + x1];
-            const bl = height[y1 * w + x0], bc = height[y1 * w + x], br = height[y1 * w + x1];
-            const dx = (tr + 2 * mr + br) - (tl + 2 * ml + bl);
-            const dy = (bl + 2 * bc + br) - (tl + 2 * tc + tr);
-            const nx = -dx * strength, ny = -dy * strength, nz = 1;
-            const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
-            const o = i * 4;
-            img2.data[o] = Math.round(((nx / len) * 0.5 + 0.5) * 255);
-            img2.data[o + 1] = Math.round(((ny / len) * 0.5 + 0.5) * 255);
-            img2.data[o + 2] = Math.round(((nz / len) * 0.5 + 0.5) * 255);
-            img2.data[o + 3] = 255;
-          }
-        }
-        octx.putImageData(img2, 0, 0);
-        return out;
-      }
-
-      function loadImage(dataUrl) {
-        return new Promise((res, rej) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.onload = () => res(img);
-          img.onerror = rej;
-          img.src = dataUrl;
-        });
-      }
-
-      async function refreshLogoTextures() {
-        if (!state.logoDataUrl) {
-          logoDiffuseTexture = null;
-          logoNormalMap = null;
-          rebuildFoil();
-          return;
-        }
-        const img = await loadImage(state.logoDataUrl);
-        // Diffuse
-        const diffCanvas = document.createElement("canvas");
-        diffCanvas.width = img.width; diffCanvas.height = img.height;
-        diffCanvas.getContext("2d").drawImage(img, 0, 0);
-        logoDiffuseTexture = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CanvasTexture(diffCanvas);
-        logoDiffuseTexture.colorSpace = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SRGBColorSpace;
-        logoDiffuseTexture.needsUpdate = true;
-        // Normal Map
-        const normCanvas = imageToNormalMapCanvas(img, state.embossStrength);
-        logoNormalMap = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CanvasTexture(normCanvas);
-        logoNormalMap.colorSpace = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.NoColorSpace;
-        logoNormalMap.needsUpdate = true;
-        rebuildFoil();
-      }
-
-      // ============================================================
-      //  UI · BUILD CONTROLS
-      // ============================================================
-      const shapePickerEl = document.getElementById("shapePicker");
-      const shapeIcons = {
-        "ronde":            `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.85"/>`,
-        "ronde-lasche":     `<circle cx="12" cy="14" r="10" fill="currentColor" opacity="0.85"/><path d="M21 11 l5 3 -5 3 z" fill="currentColor" opacity="0.85"/>`,
-        "kappe":            `<ellipse cx="14" cy="18" rx="11" ry="3" fill="currentColor" opacity="0.4"/><path d="M3 18 q11 -16 22 0" fill="currentColor" opacity="0.85"/>`,
-        "kappe-lasche":     `<ellipse cx="12" cy="18" rx="10" ry="3" fill="currentColor" opacity="0.4"/><path d="M2 18 q10 -16 20 0" fill="currentColor" opacity="0.85"/><path d="M21 16 l5 2 -5 2 z" fill="currentColor" opacity="0.85"/>`,
-        "verformt-lasche":  `<ellipse cx="12" cy="14" rx="10" ry="6" fill="currentColor" opacity="0.85"/><path d="M21 12 l5 2 -5 2 z" fill="currentColor" opacity="0.85"/>`,
-        "verformte-ronde":  `<ellipse cx="14" cy="14" rx="11" ry="7" fill="currentColor" opacity="0.85"/>`,
-        "induktionssiegel": `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
-        "baco-bond":        `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.85"/><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>`,
-        "rollenware":       `<rect x="3" y="11" width="22" height="6" rx="2" fill="currentColor" opacity="0.85"/><circle cx="6" cy="14" r="3" fill="currentColor"/>`,
-      };
-
-      SHAPES.forEach((s) => {
-        const btn = document.createElement("button");
-        btn.className = "form-btn" + (s.id === state.shape ? " active" : "");
-        btn.dataset.id = s.id;
-        btn.innerHTML = `
-          <svg viewBox="0 0 28 28">${shapeIcons[s.id] || ""}</svg>
-          <div>${s.label}</div>
-          <div class="code">${s.code}</div>
-        `;
-        btn.onclick = () => {
-          state.shape = s.id;
-          document.querySelectorAll(".form-btn").forEach((b) => b.classList.toggle("active", b.dataset.id === s.id));
-          document.getElementById("shapeLabel").textContent = `${s.label} (${s.code})`;
-          rebuildFoil();
-        };
-        shapePickerEl.appendChild(btn);
-      });
-
-      const matPickerEl = document.getElementById("materialPicker");
-      MATERIALS.forEach((m) => {
-        const chip = document.createElement("button");
-        chip.className = "chip" + (m.id === state.material ? " active" : "");
-        chip.dataset.id = m.id;
-        chip.style.borderColor = m.id === state.material ? m.ui : "";
-        chip.style.background = m.id === state.material ? m.ui : "";
-        chip.style.color = m.id === state.material ? "#1a1a1a" : "";
-        chip.innerHTML = `<span class="swatch" style="background:${m.ui}"></span>${m.label}`;
-        chip.onclick = () => {
-          state.material = m.id;
-          document.querySelectorAll(".chip").forEach((c) => {
-            const mc = MATERIALS.find((mm) => mm.id === c.dataset.id);
-            const active = c.dataset.id === m.id;
-            c.classList.toggle("active", active);
-            c.style.borderColor = active ? mc.ui : "";
-            c.style.background = active ? mc.ui : "";
-            c.style.color = active ? "#1a1a1a" : "";
-          });
-          rebuildFoil();
-        };
-        matPickerEl.appendChild(chip);
-      });
-
-      document.getElementById("diameterSlider").addEventListener("input", (e) => {
-        state.diameter = +e.target.value;
-        document.getElementById("diameterValue").textContent = state.diameter;
-        rebuildFoil();
-      });
-
-      document.getElementById("logoBtn").onclick = () => document.getElementById("logoInput").click();
-      document.getElementById("logoInput").addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          state.logoDataUrl = reader.result;
-          const prev = document.getElementById("logoPreview");
-          prev.style.display = "block";
-          prev.style.backgroundImage = `url(${state.logoDataUrl})`;
-          refreshLogoTextures();
-        };
-        reader.readAsDataURL(file);
-      });
-
-      const switchEl = document.getElementById("embossSwitch");
-      const toggleRowEl = document.getElementById("embossToggle");
-      function setEmboss(v) {
-        state.embossingMode = v;
-        switchEl.classList.toggle("on", v);
-        document.getElementById("embossDescr").textContent = v ? "An = Logo als Relief" : "Aus = Logo als Druckbild";
-        document.getElementById("embossStrengthGroup").style.display = v ? "" : "none";
-        refreshLogoTextures();
-      }
-      toggleRowEl.onclick = (e) => {
-        if (e.target.closest("input, button")) return;
-        setEmboss(!state.embossingMode);
-      };
-
-      document.getElementById("embossStrengthSlider").addEventListener("input", (e) => {
-        state.embossStrength = +e.target.value;
-        document.getElementById("embossStrengthValue").textContent = state.embossStrength.toFixed(1);
-        if (state.embossingMode) refreshLogoTextures();
-      });
-
-      document.getElementById("resetBtn").onclick = () => {
-        state.shape = "ronde";
-        state.diameter = 95;
-        state.material = "alu_g";
-        state.logoDataUrl = null;
-        state.embossingMode = false;
-        state.embossStrength = 4;
-        document.getElementById("logoPreview").style.display = "none";
-        document.getElementById("logoInput").value = "";
-        document.getElementById("diameterSlider").value = 95;
-        document.getElementById("diameterValue").textContent = "95";
-        document.getElementById("embossStrengthSlider").value = 4;
-        document.getElementById("embossStrengthValue").textContent = "4.0";
-        switchEl.classList.remove("on");
-        document.getElementById("embossDescr").textContent = "Aus = Logo als Druckbild";
-        document.getElementById("embossStrengthGroup").style.display = "none";
-        document.querySelectorAll(".form-btn").forEach((b) => b.classList.toggle("active", b.dataset.id === "ronde"));
-        document.querySelectorAll(".chip").forEach((c) => {
-          const mc = MATERIALS.find((mm) => mm.id === c.dataset.id);
-          const active = c.dataset.id === "alu_g";
-          c.classList.toggle("active", active);
-          c.style.borderColor = active ? mc.ui : "";
-          c.style.background = active ? mc.ui : "";
-          c.style.color = active ? "#1a1a1a" : "";
-        });
-        document.getElementById("shapeLabel").textContent = "Ronde (R)";
-        logoDiffuseTexture = null;
-        logoNormalMap = null;
-        rebuildFoil();
-      };
-
-      // ============================================================
-      //  RESIZE + ANIMATION LOOP
-      // ============================================================
-      function resize() {
-        const wrap = document.querySelector(".canvas-wrap");
-        const w = wrap.clientWidth;
-        const h = wrap.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h, false);
-      }
-      window.addEventListener("resize", resize);
-      resize();
-
-      function animate() {
-        requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
-      }
-
-      rebuildFoil();
-      animate();
+const SHAPES = [
+  { id: "ronde", label: "Ronde", code: "R" },
+  { id: "ronde-lasche", label: "Ronde · Lasche", code: "AR" },
+  { id: "kappe", label: "Kappe", code: "K" },
+  { id: "kappe-lasche", label: "Kappe · Lasche", code: "AK" },
+  { id: "verformt-lasche", label: "Verformt · Lasche", code: "AL" },
+  { id: "verformte-ronde", label: "Verformt", code: "—" },
+  { id: "induktionssiegel", label: "Induktion", code: "IR" },
+  { id: "baco-bond", label: "BaCo Bond", code: "PSL" },
+  { id: "rollenware", label: "Rollenware", code: "—" }
+];
+const MATERIALS = [
+  { id: "alu_g", label: "Alu glänzend", color: 14211288, metalness: 0.92, roughness: 0.18, ui: "#d8d8d8" },
+  { id: "alu_m", label: "Alu matt", color: 12434877, metalness: 0.55, roughness: 0.6, ui: "#bdbdbd" },
+  { id: "kunst", label: "Kunststoff", color: 16185076, metalness: 0, roughness: 0.65, ui: "#f6f6f4" },
+  { id: "gold", label: "Heißfolie Gold", color: 13938487, metalness: 1, roughness: 0.15, ui: "#d4af37" },
+  { id: "silber", label: "Heißfolie Silber", color: 13620957, metalness: 1, roughness: 0.1, ui: "#cfd6dd" },
+  { id: "kupfer", label: "Heißfolie Kupfer", color: 12088115, metalness: 1, roughness: 0.18, ui: "#b87333" }
+];
+const state = {
+  shape: "ronde",
+  diameter: 95,
+  material: "alu_g",
+  logoDataUrl: null,
+  embossingMode: false,
+  embossStrength: 4
+};
+let foilGroup = null;
+let logoDiffuseTexture = null;
+let logoNormalMap = null;
+const canvas = document.getElementById("canvas");
+const renderer = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1;
+const scene = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Scene();
+const camera = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PerspectiveCamera(34, 1, 0.01, 100);
+camera.position.set(0, 0.55, 2.6);
+const pmrem = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.add(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.AmbientLight(16777215, 0.25));
+const keyLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16777215, 1.6);
+keyLight.position.set(2.5, 4, 3);
+scene.add(keyLight);
+const fillLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16770229, 0.4);
+fillLight.position.set(-3, 1, -2);
+scene.add(fillLight);
+const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(2.4, 64);
+const floorMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshStandardMaterial({
+  color: 1710620,
+  metalness: 0.6,
+  roughness: 0.4
+});
+const floor = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.05;
+scene.add(floor);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minPolarAngle = 0.15;
+controls.maxPolarAngle = Math.PI / 2.05;
+controls.enablePan = false;
+controls.minDistance = 1.5;
+controls.maxDistance = 5;
+controls.target.set(0, 0.05, 0);
+const MM = 0.01;
+function laschePath(shape, edgeR, side = "right") {
+  const w = 14 * MM, h = 18 * MM;
+  const sx = side === "right" ? edgeR : -edgeR;
+  const dir = side === "right" ? 1 : -1;
+  shape.moveTo(sx, -0.14 / 2);
+  shape.lineTo(sx + dir * h * 0.6, -0.14 / 2 * 0.85);
+  shape.quadraticCurveTo(sx + dir * h, 0, sx + dir * h * 0.6, w / 2 * 0.85);
+  shape.lineTo(sx, w / 2);
+}
+function rondeShape(diameter, withLasche = false) {
+  const r = diameter / 2 * MM;
+  const shape = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Shape();
+  const segs = 96;
+  if (withLasche) {
+    const angleStart = Math.asin(14 * MM / 2 / r) || 0.08;
+    shape.absarc(0, 0, r, angleStart, 2 * Math.PI - angleStart, false);
+    laschePath(shape, r * Math.cos(angleStart), "right");
+    shape.lineTo(r * Math.cos(angleStart), r * Math.sin(angleStart) * -1);
+  } else {
+    shape.absarc(0, 0, r, 0, Math.PI * 2, false);
+  }
+  return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShapeGeometry(shape, segs);
+}
+function ovalShape(diameter, withLasche = false) {
+  const w = diameter / 2 * MM;
+  const h = diameter / 2 * MM * 0.7;
+  const shape = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Shape();
+  if (withLasche) {
+    const angleStart = 0.18;
+    shape.absellipse(0, 0, w, h, angleStart, 2 * Math.PI - angleStart, false, 0);
+    laschePath(shape, w * Math.cos(angleStart), "right");
+    shape.lineTo(w * Math.cos(angleStart), h * Math.sin(angleStart) * -1);
+  } else {
+    shape.absellipse(0, 0, w, h, 0, Math.PI * 2, false, 0);
+  }
+  return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShapeGeometry(shape, 96);
+}
+function buildFlatFoil(geometry, material) {
+  const mesh = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(geometry, material);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = 0;
+  const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
+  group.add(mesh);
+  return group;
+}
+function buildKappe(diameter, material, withLasche = false) {
+  const r = diameter / 2 * MM;
+  const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
+  const sphereGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SphereGeometry(r, 96, 32, 0, Math.PI * 2, 0, Math.PI / 3.5);
+  const sphere = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(sphereGeo, material);
+  sphere.scale.y = 0.35;
+  group.add(sphere);
+  const baseGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96);
+  const base = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(baseGeo, material);
+  base.rotation.x = -Math.PI / 2;
+  group.add(base);
+  if (withLasche) {
+    const laschenShape = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Shape();
+    laschePath(laschenShape, r, "right");
+    laschenShape.lineTo(r, -7 * MM);
+    const laschenGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShapeGeometry(laschenShape, 16);
+    const lasche = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(laschenGeo, material);
+    lasche.rotation.x = -Math.PI / 2;
+    group.add(lasche);
+  }
+  return group;
+}
+function buildInduktionssiegel(diameter, material) {
+  const r = diameter / 2 * MM;
+  const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
+  const disc = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96), material);
+  disc.rotation.x = -Math.PI / 2;
+  group.add(disc);
+  const innerR = r * 0.7;
+  const ringGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.RingGeometry(innerR * 0.92, innerR, 96);
+  const ringMat = material.clone();
+  ringMat.color = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(9079434);
+  ringMat.metalness = Math.min(material.metalness + 0.05, 1);
+  ringMat.roughness = Math.max(material.roughness - 0.1, 0.05);
+  const ring = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 1e-3;
+  group.add(ring);
+  return group;
+}
+function buildBacoBond(diameter, material) {
+  const r = diameter / 2 * MM;
+  const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
+  const top = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96), material);
+  top.rotation.x = -Math.PI / 2;
+  top.position.y = 8e-3;
+  group.add(top);
+  const linerMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
+    color: 15788248,
+    metalness: 0,
+    roughness: 0.85,
+    side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DoubleSide
+  });
+  const liner = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.97, 96), linerMat);
+  liner.rotation.x = -Math.PI / 2;
+  liner.position.y = 1e-3;
+  group.add(liner);
+  return group;
+}
+function buildRollenware(diameter, material) {
+  const r = diameter / 2 * MM;
+  const len = r * 4;
+  const group = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Group();
+  const cylGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CylinderGeometry(r * 0.85, r * 0.85, r * 0.6, 96, 1, true);
+  const cyl = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(cylGeo, material);
+  cyl.rotation.z = Math.PI / 2;
+  cyl.position.set(-len * 0.35, r * 0.3, 0);
+  group.add(cyl);
+  const coreMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshStandardMaterial({ color: 11767389, metalness: 0.1, roughness: 0.9 });
+  const cap1 = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.85, 64), coreMat);
+  cap1.rotation.y = Math.PI / 2;
+  cap1.position.set(-len * 0.35 + r * 0.301, r * 0.3, 0);
+  group.add(cap1);
+  const cap2 = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r * 0.85, 64), coreMat);
+  cap2.rotation.y = -Math.PI / 2;
+  cap2.position.set(-len * 0.35 - r * 0.301, r * 0.3, 0);
+  group.add(cap2);
+  const planeGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PlaneGeometry(len * 0.8, r * 0.6);
+  const plane = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(planeGeo, material);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.set(len * 0.05, 0, 0);
+  group.add(plane);
+  return group;
+}
+function makeMaterial(matConfig) {
+  const m = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
+    color: new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(matConfig.color),
+    metalness: matConfig.metalness,
+    roughness: matConfig.roughness,
+    side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DoubleSide,
+    envMapIntensity: 1.4
+  });
+  if (logoDiffuseTexture) m.map = logoDiffuseTexture;
+  if (logoNormalMap) m.normalMap = logoNormalMap;
+  return m;
+}
+function disposeGroup(group) {
+  group.traverse((c) => {
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) {
+      if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose());
+      else c.material.dispose();
+    }
+  });
+}
+function rebuildFoil() {
+  if (foilGroup) {
+    scene.remove(foilGroup);
+    disposeGroup(foilGroup);
+  }
+  const matConfig = MATERIALS.find((m) => m.id === state.material);
+  const material = makeMaterial(matConfig);
+  const d = state.diameter;
+  switch (state.shape) {
+    case "ronde":
+      foilGroup = buildFlatFoil(rondeShape(d, false), material);
+      break;
+    case "ronde-lasche":
+      foilGroup = buildFlatFoil(rondeShape(d, true), material);
+      break;
+    case "kappe":
+      foilGroup = buildKappe(d, material, false);
+      break;
+    case "kappe-lasche":
+      foilGroup = buildKappe(d, material, true);
+      break;
+    case "verformt-lasche":
+      foilGroup = buildFlatFoil(ovalShape(d, true), material);
+      break;
+    case "verformte-ronde":
+      foilGroup = buildFlatFoil(ovalShape(d, false), material);
+      break;
+    case "induktionssiegel":
+      foilGroup = buildInduktionssiegel(d, material);
+      break;
+    case "baco-bond":
+      foilGroup = buildBacoBond(d, material);
+      break;
+    case "rollenware":
+      foilGroup = buildRollenware(d, material);
+      break;
+    default:
+      foilGroup = buildFlatFoil(rondeShape(d, false), material);
+      break;
+  }
+  scene.add(foilGroup);
+  updateInfoLabel();
+}
+function updateInfoLabel() {
+  const shape = SHAPES.find((s) => s.id === state.shape);
+  const mat = MATERIALS.find((m) => m.id === state.material);
+  const veredel = state.logoDataUrl ? state.embossingMode ? " · Blindprägung" : " · Druck" : "";
+  document.getElementById("canvasInfo").innerHTML = `<b>${shape.label}</b> ${shape.code !== "—" ? `[${shape.code}]` : ""} · Ø${state.diameter}mm · ${mat.label}${veredel}`;
+}
+function imageToNormalMapCanvas(img, strength = 4) {
+  const w = img.width, h = img.height;
+  const reader = document.createElement("canvas");
+  reader.width = w;
+  reader.height = h;
+  const rctx = reader.getContext("2d");
+  rctx.drawImage(img, 0, 0);
+  const src = rctx.getImageData(0, 0, w, h).data;
+  const height = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const r = src[i * 4], g = src[i * 4 + 1], b = src[i * 4 + 2];
+    const a = src[i * 4 + 3] / 255;
+    height[i] = (0.299 * r + 0.587 * g + 0.114 * b) / 255 * a;
+  }
+  const out = document.createElement("canvas");
+  out.width = w;
+  out.height = h;
+  const octx = out.getContext("2d");
+  const img2 = octx.createImageData(w, h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      const x0 = x === 0 ? 0 : x - 1;
+      const x1 = x === w - 1 ? w - 1 : x + 1;
+      const y0 = y === 0 ? 0 : y - 1;
+      const y1 = y === h - 1 ? h - 1 : y + 1;
+      const tl = height[y0 * w + x0], tc = height[y0 * w + x], tr = height[y0 * w + x1];
+      const ml = height[y * w + x0], mr = height[y * w + x1];
+      const bl = height[y1 * w + x0], bc = height[y1 * w + x], br = height[y1 * w + x1];
+      const dx = tr + 2 * mr + br - (tl + 2 * ml + bl);
+      const dy = bl + 2 * bc + br - (tl + 2 * tc + tr);
+      const nx = -dx * strength, ny = -dy * strength, nz = 1;
+      const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+      const o = i * 4;
+      img2.data[o] = Math.round((nx / len * 0.5 + 0.5) * 255);
+      img2.data[o + 1] = Math.round((ny / len * 0.5 + 0.5) * 255);
+      img2.data[o + 2] = Math.round((nz / len * 0.5 + 0.5) * 255);
+      img2.data[o + 3] = 255;
+    }
+  }
+  octx.putImageData(img2, 0, 0);
+  return out;
+}
+function loadImage(dataUrl) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = dataUrl;
+  });
+}
+async function refreshLogoTextures() {
+  if (!state.logoDataUrl) {
+    logoDiffuseTexture = null;
+    logoNormalMap = null;
+    rebuildFoil();
+    return;
+  }
+  const img = await loadImage(state.logoDataUrl);
+  const diffCanvas = document.createElement("canvas");
+  diffCanvas.width = img.width;
+  diffCanvas.height = img.height;
+  diffCanvas.getContext("2d").drawImage(img, 0, 0);
+  logoDiffuseTexture = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CanvasTexture(diffCanvas);
+  logoDiffuseTexture.colorSpace = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SRGBColorSpace;
+  logoDiffuseTexture.needsUpdate = true;
+  const normCanvas = imageToNormalMapCanvas(img, state.embossStrength);
+  logoNormalMap = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CanvasTexture(normCanvas);
+  logoNormalMap.colorSpace = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.NoColorSpace;
+  logoNormalMap.needsUpdate = true;
+  rebuildFoil();
+}
+const shapePickerEl = document.getElementById("shapePicker");
+const shapeIcons = {
+  "ronde": `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.85"/>`,
+  "ronde-lasche": `<circle cx="12" cy="14" r="10" fill="currentColor" opacity="0.85"/><path d="M21 11 l5 3 -5 3 z" fill="currentColor" opacity="0.85"/>`,
+  "kappe": `<ellipse cx="14" cy="18" rx="11" ry="3" fill="currentColor" opacity="0.4"/><path d="M3 18 q11 -16 22 0" fill="currentColor" opacity="0.85"/>`,
+  "kappe-lasche": `<ellipse cx="12" cy="18" rx="10" ry="3" fill="currentColor" opacity="0.4"/><path d="M2 18 q10 -16 20 0" fill="currentColor" opacity="0.85"/><path d="M21 16 l5 2 -5 2 z" fill="currentColor" opacity="0.85"/>`,
+  "verformt-lasche": `<ellipse cx="12" cy="14" rx="10" ry="6" fill="currentColor" opacity="0.85"/><path d="M21 12 l5 2 -5 2 z" fill="currentColor" opacity="0.85"/>`,
+  "verformte-ronde": `<ellipse cx="14" cy="14" rx="11" ry="7" fill="currentColor" opacity="0.85"/>`,
+  "induktionssiegel": `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.4"/><circle cx="14" cy="14" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
+  "baco-bond": `<circle cx="14" cy="14" r="11" fill="currentColor" opacity="0.85"/><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>`,
+  "rollenware": `<rect x="3" y="11" width="22" height="6" rx="2" fill="currentColor" opacity="0.85"/><circle cx="6" cy="14" r="3" fill="currentColor"/>`
+};
+SHAPES.forEach((s) => {
+  const btn = document.createElement("button");
+  btn.className = "form-btn" + (s.id === state.shape ? " active" : "");
+  btn.dataset.id = s.id;
+  btn.innerHTML = `
+    <svg viewBox="0 0 28 28">${shapeIcons[s.id] || ""}</svg>
+    <div>${s.label}</div>
+    <div class="code">${s.code}</div>
+  `;
+  btn.onclick = () => {
+    state.shape = s.id;
+    document.querySelectorAll(".form-btn").forEach((b) => b.classList.toggle("active", b.dataset.id === s.id));
+    document.getElementById("shapeLabel").textContent = `${s.label} (${s.code})`;
+    rebuildFoil();
+  };
+  shapePickerEl.appendChild(btn);
+});
+const matPickerEl = document.getElementById("materialPicker");
+MATERIALS.forEach((m) => {
+  const chip = document.createElement("button");
+  chip.className = "chip" + (m.id === state.material ? " active" : "");
+  chip.dataset.id = m.id;
+  chip.style.borderColor = m.id === state.material ? m.ui : "";
+  chip.style.background = m.id === state.material ? m.ui : "";
+  chip.style.color = m.id === state.material ? "#1a1a1a" : "";
+  chip.innerHTML = `<span class="swatch" style="background:${m.ui}"></span>${m.label}`;
+  chip.onclick = () => {
+    state.material = m.id;
+    document.querySelectorAll(".chip").forEach((c) => {
+      const mc = MATERIALS.find((mm) => mm.id === c.dataset.id);
+      const active = c.dataset.id === m.id;
+      c.classList.toggle("active", active);
+      c.style.borderColor = active ? mc.ui : "";
+      c.style.background = active ? mc.ui : "";
+      c.style.color = active ? "#1a1a1a" : "";
+    });
+    rebuildFoil();
+  };
+  matPickerEl.appendChild(chip);
+});
+document.getElementById("diameterSlider").addEventListener("input", (e) => {
+  state.diameter = +e.target.value;
+  document.getElementById("diameterValue").textContent = state.diameter;
+  rebuildFoil();
+});
+document.getElementById("logoBtn").onclick = () => document.getElementById("logoInput").click();
+document.getElementById("logoInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    state.logoDataUrl = reader.result;
+    const prev = document.getElementById("logoPreview");
+    prev.style.display = "block";
+    prev.style.backgroundImage = `url(${state.logoDataUrl})`;
+    refreshLogoTextures();
+  };
+  reader.readAsDataURL(file);
+});
+const switchEl = document.getElementById("embossSwitch");
+const toggleRowEl = document.getElementById("embossToggle");
+function setEmboss(v) {
+  state.embossingMode = v;
+  switchEl.classList.toggle("on", v);
+  document.getElementById("embossDescr").textContent = v ? "An = Logo als Relief" : "Aus = Logo als Druckbild";
+  document.getElementById("embossStrengthGroup").style.display = v ? "" : "none";
+  refreshLogoTextures();
+}
+toggleRowEl.onclick = (e) => {
+  if (e.target.closest("input, button")) return;
+  setEmboss(!state.embossingMode);
+};
+document.getElementById("embossStrengthSlider").addEventListener("input", (e) => {
+  state.embossStrength = +e.target.value;
+  document.getElementById("embossStrengthValue").textContent = state.embossStrength.toFixed(1);
+  if (state.embossingMode) refreshLogoTextures();
+});
+document.getElementById("resetBtn").onclick = () => {
+  state.shape = "ronde";
+  state.diameter = 95;
+  state.material = "alu_g";
+  state.logoDataUrl = null;
+  state.embossingMode = false;
+  state.embossStrength = 4;
+  document.getElementById("logoPreview").style.display = "none";
+  document.getElementById("logoInput").value = "";
+  document.getElementById("diameterSlider").value = 95;
+  document.getElementById("diameterValue").textContent = "95";
+  document.getElementById("embossStrengthSlider").value = 4;
+  document.getElementById("embossStrengthValue").textContent = "4.0";
+  switchEl.classList.remove("on");
+  document.getElementById("embossDescr").textContent = "Aus = Logo als Druckbild";
+  document.getElementById("embossStrengthGroup").style.display = "none";
+  document.querySelectorAll(".form-btn").forEach((b) => b.classList.toggle("active", b.dataset.id === "ronde"));
+  document.querySelectorAll(".chip").forEach((c) => {
+    const mc = MATERIALS.find((mm) => mm.id === c.dataset.id);
+    const active = c.dataset.id === "alu_g";
+    c.classList.toggle("active", active);
+    c.style.borderColor = active ? mc.ui : "";
+    c.style.background = active ? mc.ui : "";
+    c.style.color = active ? "#1a1a1a" : "";
+  });
+  document.getElementById("shapeLabel").textContent = "Ronde (R)";
+  logoDiffuseTexture = null;
+  logoNormalMap = null;
+  rebuildFoil();
+};
+function resize() {
+  const wrap = document.querySelector(".canvas-wrap");
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+}
+window.addEventListener("resize", resize);
+resize();
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+rebuildFoil();
+animate();
