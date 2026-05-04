@@ -5356,52 +5356,59 @@ renderer.shadowMap.type = ballerstaedt_mf_2_veredelung__loadShare__three__loadSh
 renderer.toneMappingExposure = 0.78;
 scene.background = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(5);
 function buildStarField() {
-  const N = 6e3;
+  const N = 9e3;
   const pos = new Float32Array(N * 3);
   const col = new Float32Array(N * 3);
   const siz = new Float32Array(N);
   for (let i = 0; i < N; i++) {
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(2 * Math.random() - 1);
-    const r = 60 + Math.random() * 40;
+    const inBand = Math.random() < 0.6;
+    let theta = Math.random() * Math.PI * 2;
+    let phi;
+    if (inBand) {
+      const u = Math.random() + Math.random() + Math.random() - 1.5;
+      phi = Math.PI / 2 + u * 0.35;
+    } else {
+      phi = Math.acos(2 * Math.random() - 1);
+    }
+    const r = 70 + Math.random() * 30;
     pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     pos[i * 3 + 1] = r * Math.cos(phi);
     pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
     const t = Math.random();
     if (t < 0.7) {
       col[i * 3] = 1;
-      col[i * 3 + 1] = 1;
-      col[i * 3 + 2] = 1;
-    } else if (t < 0.88) {
-      col[i * 3] = 0.78;
-      col[i * 3 + 1] = 0.86;
+      col[i * 3 + 1] = 0.97 + Math.random() * 0.03;
+      col[i * 3 + 2] = 0.92 + Math.random() * 0.06;
+    } else if (t < 0.9) {
+      col[i * 3] = 0.78 + Math.random() * 0.1;
+      col[i * 3 + 1] = 0.85 + Math.random() * 0.1;
       col[i * 3 + 2] = 1;
     } else {
       col[i * 3] = 1;
-      col[i * 3 + 1] = 0.85;
-      col[i * 3 + 2] = 0.65;
+      col[i * 3 + 1] = 0.7 + Math.random() * 0.15;
+      col[i * 3 + 2] = 0.5 + Math.random() * 0.15;
     }
-    siz[i] = 0.4 + Math.pow(Math.random(), 4) * 4;
+    siz[i] = 0.5 + Math.pow(Math.random(), 5) * 5;
   }
   const g = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferGeometry();
   g.setAttribute("position", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(pos, 3));
   g.setAttribute("color", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(col, 3));
   g.setAttribute("size", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(siz, 1));
   const m = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uPxRatio: { value: renderer.getPixelRatio() } },
     vertexShader: `
       attribute float size;
       attribute vec3 color;
       varying vec3 vColor;
-      varying float vSize;
       uniform float uTime;
+      uniform float uPxRatio;
       void main() {
         vColor = color;
-        vSize = size;
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        // Twinkle: subtle size oscillation per-star
-        float twinkle = 0.85 + 0.15 * sin(uTime * 2.0 + size * 23.0);
-        gl_PointSize = size * twinkle * (260.0 / -mv.z);
+        float twinkle = 0.88 + 0.12 * sin(uTime * 1.5 + size * 19.0);
+        // CLAMPED · keine Mega-Rectangles bei nahen Stars
+        float ps = size * twinkle * (180.0 / max(-mv.z, 1.0));
+        gl_PointSize = clamp(ps, 0.5, 12.0) * uPxRatio;
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -5411,10 +5418,9 @@ function buildStarField() {
         vec2 c = gl_PointCoord - 0.5;
         float d = length(c);
         if (d > 0.5) discard;
-        // Soft glow falloff für realistic stars
-        float a = 1.0 - smoothstep(0.0, 0.5, d);
-        a = pow(a, 1.8);
-        gl_FragColor = vec4(vColor, a);
+        // Realistische Stern-Helligkeitskurve (Gauss)
+        float a = exp(-d * d * 18.0);
+        gl_FragColor = vec4(vColor * (0.4 + a * 1.4), a);
       }
     `,
     vertexColors: true,
@@ -5426,8 +5432,8 @@ function buildStarField() {
 }
 const stars = buildStarField();
 scene.add(stars);
-function buildNebula() {
-  const geo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SphereGeometry(50, 64, 32);
+function buildGalacticHaze() {
+  const geo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SphereGeometry(55, 64, 32);
   const mat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShaderMaterial({
     uniforms: { uTime: { value: 0 } },
     vertexShader: `
@@ -5439,61 +5445,30 @@ function buildNebula() {
     `,
     fragmentShader: `
       varying vec3 vWorldPos;
-      uniform float uTime;
-
-      // simple 3D noise via hash
+      // simple noise
       float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 54.227))) * 43758.5453); }
       float noise(vec3 p) {
-        vec3 i = floor(p);
-        vec3 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        float n000 = hash(i);
-        float n100 = hash(i + vec3(1,0,0));
-        float n010 = hash(i + vec3(0,1,0));
-        float n110 = hash(i + vec3(1,1,0));
-        float n001 = hash(i + vec3(0,0,1));
-        float n101 = hash(i + vec3(1,0,1));
-        float n011 = hash(i + vec3(0,1,1));
-        float n111 = hash(i + vec3(1,1,1));
+        vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.0-2.0*f);
         return mix(
-          mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
-          mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y),
+          mix(mix(hash(i), hash(i+vec3(1,0,0)), f.x), mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)), f.x), f.y),
+          mix(mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)), f.x), mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)), f.x), f.y),
           f.z
         );
       }
-      // Multi-octave fbm
       float fbm(vec3 p) {
         float s = 0.0; float a = 0.5;
-        for (int i = 0; i < 5; i++) {
-          s += a * noise(p);
-          p *= 2.1;
-          a *= 0.5;
-        }
+        for (int i = 0; i < 4; i++) { s += a * noise(p); p *= 2.0; a *= 0.5; }
         return s;
       }
-
       void main() {
         vec3 dir = normalize(vWorldPos);
-        // Polar-Skala für Milky-Way-band-look (entlang Equator-Plane)
-        float band = 1.0 - abs(dir.y) * 1.6;
-        band = max(0.0, band);
-
-        // Multi-scale noise · Milky Way-cloud-look
-        vec3 p1 = dir * 4.0;
-        vec3 p2 = dir * 12.0;
-        float c1 = fbm(p1);
-        float c2 = fbm(p2);
-        float density = (c1 * 0.7 + c2 * 0.3) * band;
-        density = pow(density, 2.5);
-
-        // Color-Mix: deep blue → magenta-purple in dichten Bereichen
-        vec3 deepBlue = vec3(0.04, 0.05, 0.12);
-        vec3 magenta  = vec3(0.55, 0.05, 0.32);
-        vec3 dust     = vec3(0.18, 0.08, 0.12);
-        vec3 col = mix(deepBlue, magenta, smoothstep(0.2, 0.7, density));
-        col = mix(col, dust, smoothstep(0.7, 1.0, density));
-        col *= density * 1.5;
-
+        // Konzentriert entlang galactic plane (y ~ 0)
+        float bandStrength = exp(-dir.y * dir.y * 25.0);
+        float n = fbm(dir * 6.0);
+        float density = bandStrength * smoothstep(0.35, 0.85, n);
+        // Realistische Milky-Way-Farben: warm-weiß mit leicht bläulichem Halo
+        vec3 col = mix(vec3(0.18, 0.20, 0.28), vec3(0.85, 0.78, 0.62), density * 0.5);
+        col *= density * 0.45;  // dezent, nicht überstrahlend
         gl_FragColor = vec4(col, 1.0);
       }
     `,
@@ -5502,8 +5477,8 @@ function buildNebula() {
   });
   return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(geo, mat);
 }
-const nebula = buildNebula();
-scene.add(nebula);
+const galacticHaze = buildGalacticHaze();
+scene.add(galacticHaze);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.07;
@@ -6203,7 +6178,8 @@ function animate() {
   controls.update();
   cinematicPass.uniforms.uTime.value = t;
   stars.material.uniforms.uTime.value = t;
-  nebula.rotation.y = t * 8e-3;
+  galacticHaze.rotation.y = t * 8e-3;
+  stars.rotation.y = t * 8e-3;
   composer.render();
 }
 (function setupPraegungPicker() {
