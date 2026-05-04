@@ -4782,8 +4782,11 @@ function animate() {
   controls.update();
   composer.render();
 }
-const sampleRow_ref = document.getElementById("sampleLogosRow");
-if (sampleRow_ref && !document.getElementById("praegungRow")) {
+(function setupPraegungPicker() {
+  const aside = document.querySelector("aside.controls");
+  if (!aside || document.getElementById("praegungRow")) return;
+  const logoBtn = document.getElementById("logoBtn");
+  const logoGroup = logoBtn ? logoBtn.closest(".group") : null;
   const praegungSection = document.createElement("div");
   praegungSection.className = "group";
   praegungSection.innerHTML = `
@@ -4791,14 +4794,12 @@ if (sampleRow_ref && !document.getElementById("praegungRow")) {
       <span>Strukturprägung</span>
       <span class="value" id="praegungLabel">Glatt</span>
     </div>
-    <div class="form-grid" id="praegungRow" style="grid-template-columns: repeat(3, 1fr);"></div>
+    <div class="form-grid" id="praegungRow"></div>
   `;
-  const logoBtn = document.getElementById("logoBtn");
-  if (logoBtn && logoBtn.parentElement && logoBtn.parentElement.parentElement) {
-    logoBtn.parentElement.parentElement.parentElement.insertBefore(
-      praegungSection,
-      logoBtn.parentElement.parentElement
-    );
+  if (logoGroup && logoGroup.parentElement === aside) {
+    aside.insertBefore(praegungSection, logoGroup);
+  } else {
+    aside.appendChild(praegungSection);
   }
   const praegungRowEl = document.getElementById("praegungRow");
   PRAEGUNGEN.forEach((p) => {
@@ -4811,11 +4812,12 @@ if (sampleRow_ref && !document.getElementById("praegungRow")) {
       document.querySelectorAll("#praegungRow .form-btn").forEach((b) => {
         b.classList.toggle("active", b.dataset.id === p.id);
       });
-      document.getElementById("praegungLabel").textContent = p.label;
+      const lbl = document.getElementById("praegungLabel");
+      if (lbl) lbl.textContent = p.label;
       rebuildFoil();
     };
     praegungRowEl.appendChild(btn);
   });
-}
+})();
 rebuildFoil();
 animate();
