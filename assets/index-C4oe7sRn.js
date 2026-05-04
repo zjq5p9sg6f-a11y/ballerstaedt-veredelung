@@ -5327,14 +5327,14 @@ new RGBELoader().setPath("./textures/").load(
 const beautydish = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SpotLight(
   16775406,
   // sehr leicht warm (5500K-Tageslicht-Look)
-  3.2,
-  // intensity
+  1.4,
+  // intensity · realistisch, nicht überstrahlend
   5,
   // distance
   Math.PI / 7.5,
-  // cone angle ~24° (typisch für 50cm Beautydish auf 1.5m Distanz)
+  // cone angle ~24°
   0.55,
-  // penumbra · halbweicher Rand (nicht hard, nicht so soft wie Box)
+  // penumbra
   1.6
   // decay
 );
@@ -5353,7 +5353,7 @@ fillReflector.position.set(-1.8, 0.6, 0.8);
 scene.add(fillReflector);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.VSMShadowMap;
-renderer.toneMappingExposure = 1;
+renderer.toneMappingExposure = 0.78;
 const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(5, 128);
 const floorMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
   color: 789518,
@@ -5527,17 +5527,18 @@ function makeMaterial(matConfig) {
     metalness: matConfig.metalness,
     roughness: matConfig.roughness,
     side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DoubleSide,
-    envMapIntensity: 1.6,
-    // Premium-Eigenschaften
-    clearcoat: isLack ? 0.6 : isAlu ? 0.15 : 0.25,
-    clearcoatRoughness: isLack ? 0.08 : 0.25,
-    sheen: matConfig.id === "kunst" ? 0.3 : 0,
+    envMapIntensity: 0.85,
+    // realistic, nicht überreflektiert
+    clearcoat: isLack ? 0.25 : isAlu ? 0.05 : 0.1,
+    // deutlich weniger Klarschicht
+    clearcoatRoughness: isLack ? 0.18 : 0.35,
+    sheen: matConfig.id === "kunst" ? 0.2 : 0,
     sheenColor: new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(16777215),
     sheenRoughness: 0.6,
-    anisotropy: isAlu ? 0.4 : 0,
+    anisotropy: isAlu ? 0.35 : 0,
     anisotropyRotation: Math.PI / 4,
-    iridescence: isLack ? 0.05 : 0,
-    iridescenceIOR: 1.3
+    iridescence: 0
+    // kein Regenbogen-Effekt
   });
   const praegungMap = getPraegungNormalMap(state.praegung);
   if (praegungMap) {
@@ -5976,28 +5977,28 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloomPass = new UnrealBloomPass(
   new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Vector2(window.innerWidth, window.innerHeight),
-  0.22,
-  // strength · spürbar dezenter
-  0.4,
-  // radius
-  0.92
-  // threshold · nur sehr helle Spots
+  0,
+  // strength = 0 → effektiv aus
+  0,
+  1
+  // threshold so hoch dass nichts blooming
 );
+bloomPass.enabled = false;
 composer.addPass(bloomPass);
 const cinematicShader = {
   uniforms: {
     tDiffuse: { value: null },
     uTime: { value: 0 },
-    uVigStr: { value: 0.35 },
-    // dezent
-    uVigSize: { value: 0.65 },
-    // weicher Übergang
-    uGrain: { value: 4e-3 },
-    // kaum sichtbar
+    uVigStr: { value: 0.18 },
+    // sehr leicht
+    uVigSize: { value: 0.75 },
+    // außen
+    uGrain: { value: 0 },
+    // KEIN Grain
     uTint: { value: new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Vector3(1, 1, 1) },
-    // neutral
-    uContrast: { value: 1.02 },
-    // minimal
+    // 100% neutral
+    uContrast: { value: 1 },
+    // unverändert
     uSatur: { value: 1 }
     // unverändert
   },
