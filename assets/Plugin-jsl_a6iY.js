@@ -513,7 +513,6 @@ const dynamicSealFoil = {
     shape: {},
     diameterMm: {},
     materialPreset: {},
-    baseColor: {},
     metalness: {},
     roughness: {},
     embossingMode: {},
@@ -522,19 +521,21 @@ const dynamicSealFoil = {
     embossingLogoUrl: { type: "image" }
   },
   defaultProps: {
+    // K3 verlangt numerische Formel-Ergebnisse — alle Defaults als Number.
+    // Strings würden Fehler "Formel muss Zahlenwert sein" werfen.
     width: { expression: "1" },
     height: { expression: "1" },
     depth: { expression: "1" },
-    shape: { expression: '"ronde"' },
+    shape: { expression: "0" },
+    // 0 = Ronde (siehe SHAPE_INDEX_MAP)
     diameterMm: { expression: "95" },
-    materialPreset: { expression: '"alu_g"' },
-    baseColor: { expression: "null" },
-    metalness: { expression: "null" },
-    roughness: { expression: "null" },
-    embossingMode: { expression: "false" },
-    embossStrength: { expression: "4" },
-    printLogoUrl: { expression: "null" },
-    embossingLogoUrl: { expression: "null" }
+    materialPreset: { expression: "0" },
+    // 0 = Alu glänzend (siehe MATERIAL_PRESETS)
+    metalness: { expression: "0.85" },
+    roughness: { expression: "0.32" },
+    embossingMode: { expression: "0" },
+    // 0 = false / 1 = true
+    embossStrength: { expression: "4" }
   },
   materials: ["body"],
   screenshot
