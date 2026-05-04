@@ -59,40 +59,19 @@
       #canvas { width: 100%; height: 100%; display: block; cursor: grab; }
       #canvas:active { cursor: grabbing; }
 
-      /*  ╭─ BRAND MARK · BaCo CI-Logo in IBM Plex Sans ─────────────╮ */
+      /*  ╭─ BRAND MARK · echtes Ballerstaedt-Logo ─────────────╮ */
       .brand {
         position: fixed; top: 30px; left: 42px; z-index: 10;
-        font-family: var(--brand);
-        line-height: 1;
         user-select: none;
       }
-      .brand .top {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        color: var(--magenta);
-        display: inline-block;
-      }
-      .brand .top::after {
-        /* der Bernstein-Akzentpunkt im "O" des Originals */
-        content: "";
-        display: inline-block;
-        width: 6px; height: 6px;
-        background: linear-gradient(135deg, #f8c869, #d97706);
-        border-radius: 50%;
-        margin-left: 4px; vertical-align: super;
-        box-shadow: 0 0 8px rgba(230,164,42,0.6);
-      }
-      .brand .sub {
-        font-size: 10px;
-        font-weight: 500;
-        letter-spacing: 0.32em;
-        color: var(--text-2);
-        text-transform: uppercase;
-        margin-top: 5px;
+      .brand img {
+        height: 36px;
+        width: auto;
+        display: block;
+        filter: drop-shadow(0 2px 12px rgba(230,0,126,0.15));
       }
       .brand-sub {
-        position: fixed; top: 78px; left: 42px; z-index: 10;
+        position: fixed; top: 80px; left: 42px; z-index: 10;
         font-size: 10px;
         font-weight: 400;
         letter-spacing: 0.28em;
@@ -373,27 +352,11 @@
         width: min(440px, 90vw);
         box-shadow: var(--shadow-deep);
       }
-      .auth-card .auth-brand { margin-bottom: 8px; }
-      .auth-card .auth-brand .top {
-        font-family: var(--brand);
-        font-size: 22px; font-weight: 700;
-        letter-spacing: 0.05em;
-        color: var(--magenta);
-        line-height: 1;
-      }
-      .auth-card .auth-brand .top::after {
-        content: ""; display: inline-block;
-        width: 6px; height: 6px;
-        background: linear-gradient(135deg, #f8c869, #d97706);
-        border-radius: 50%; margin-left: 4px; vertical-align: super;
-        box-shadow: 0 0 8px rgba(230,164,42,0.6);
-      }
-      .auth-card .auth-brand .sub-line {
-        font-family: var(--brand);
-        font-size: 11px; font-weight: 500;
-        letter-spacing: 0.32em;
-        color: var(--text);
-        margin-top: 5px;
+      .auth-card .auth-brand { margin-bottom: 14px; }
+      .auth-card .auth-brand img {
+        height: 38px; width: auto;
+        display: block;
+        filter: drop-shadow(0 2px 8px rgba(230,0,126,0.12));
       }
       .auth-card p.sub {
         font-size: 12px; color: var(--text-3);
@@ -466,8 +429,7 @@
     <div id="authGate">
       <div class="auth-card">
         <div class="auth-brand">
-          <div class="top">BALLERSTAEDT</div>
-          <div class="sub-line">SIEGELSYSTEME</div>
+          <img src="./brand/ballerstaedt-logo-dark.png" alt="Ballerstaedt Siegelsysteme" />
         </div>
         <p class="sub">Veredelungs-Konfigurator · Beta-Zugang</p>
         <form id="authForm" autocomplete="off">
@@ -505,8 +467,7 @@
 
     <!-- Brand-Mark, Editorial-Serif -->
     <div class="brand auto-fade">
-      <div class="top">BALLERSTAEDT</div>
-      <div class="sub">SIEGELSYSTEME</div>
+      <img src="./brand/ballerstaedt-logo-dark.png" alt="Ballerstaedt Siegelsysteme" />
     </div>
     <div class="brand-sub auto-fade">Veredelungs-Konfigurator · Beta</div>
 
