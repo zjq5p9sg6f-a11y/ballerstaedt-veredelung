@@ -437,7 +437,17 @@ const SealFoilDynamic = (props) => {
   const [diffuseTexture, setDiffuseTexture] = ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useState(null);
   const [normalMap, setNormalMap] = ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useState(null);
   if (typeof window !== "undefined") {
-    console.log("[SealFoilPlugin] received props", props);
+    console.group("%c[SealFoilPlugin] PROPS DEBUG", "background:#d4af37;color:#000;padding:2px 6px;font-weight:bold");
+    console.log("shape (raw):", props.shape, "  typeof:", typeof props.shape);
+    console.log("shape (JSON):", JSON.stringify(props.shape));
+    console.log("form (raw):", props.form, "  Form:", props.Form);
+    console.log("printLogoUrl:", props.printLogoUrl);
+    console.log("Logo_Druckbild:", props.Logo_Druckbild);
+    console.log("embossingMode:", props.embossingMode);
+    console.log("praegung / Prägung:", props.praegung, props["Prägung"]);
+    console.log("ALL prop keys:", Object.keys(props));
+    console.log("FULL props object:", props);
+    console.groupEnd();
   }
   const printLogoUrl = extractImageUrl(
     props.printLogoUrl ?? props.logoUpload ?? props.logo ?? props["Logo / Druckbild"]
