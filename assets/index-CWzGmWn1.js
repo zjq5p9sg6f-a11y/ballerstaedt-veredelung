@@ -5354,19 +5354,156 @@ scene.add(fillReflector);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.VSMShadowMap;
 renderer.toneMappingExposure = 0.78;
-const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(5, 128);
-const floorMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
-  color: 789518,
-  metalness: 0.05,
-  roughness: 0.85,
-  envMapIntensity: 0.15
-  // weniger HDR-Reflexion am Boden
-});
-const floor = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -1e-3;
-floor.receiveShadow = true;
-scene.add(floor);
+scene.background = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(5);
+function buildStarField() {
+  const N = 6e3;
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+  const siz = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 60 + Math.random() * 40;
+    pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    pos[i * 3 + 1] = r * Math.cos(phi);
+    pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+    const t = Math.random();
+    if (t < 0.7) {
+      col[i * 3] = 1;
+      col[i * 3 + 1] = 1;
+      col[i * 3 + 2] = 1;
+    } else if (t < 0.88) {
+      col[i * 3] = 0.78;
+      col[i * 3 + 1] = 0.86;
+      col[i * 3 + 2] = 1;
+    } else {
+      col[i * 3] = 1;
+      col[i * 3 + 1] = 0.85;
+      col[i * 3 + 2] = 0.65;
+    }
+    siz[i] = 0.4 + Math.pow(Math.random(), 4) * 4;
+  }
+  const g = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferGeometry();
+  g.setAttribute("position", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(pos, 3));
+  g.setAttribute("color", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(col, 3));
+  g.setAttribute("size", new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BufferAttribute(siz, 1));
+  const m = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      attribute float size;
+      attribute vec3 color;
+      varying vec3 vColor;
+      varying float vSize;
+      uniform float uTime;
+      void main() {
+        vColor = color;
+        vSize = size;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        // Twinkle: subtle size oscillation per-star
+        float twinkle = 0.85 + 0.15 * sin(uTime * 2.0 + size * 23.0);
+        gl_PointSize = size * twinkle * (260.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float d = length(c);
+        if (d > 0.5) discard;
+        // Soft glow falloff für realistic stars
+        float a = 1.0 - smoothstep(0.0, 0.5, d);
+        a = pow(a, 1.8);
+        gl_FragColor = vec4(vColor, a);
+      }
+    `,
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+    blending: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.AdditiveBlending
+  });
+  return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Points(g, m);
+}
+const stars = buildStarField();
+scene.add(stars);
+function buildNebula() {
+  const geo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SphereGeometry(50, 64, 32);
+  const mat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec3 vWorldPos;
+      void main() {
+        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vWorldPos;
+      uniform float uTime;
+
+      // simple 3D noise via hash
+      float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 54.227))) * 43758.5453); }
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float n000 = hash(i);
+        float n100 = hash(i + vec3(1,0,0));
+        float n010 = hash(i + vec3(0,1,0));
+        float n110 = hash(i + vec3(1,1,0));
+        float n001 = hash(i + vec3(0,0,1));
+        float n101 = hash(i + vec3(1,0,1));
+        float n011 = hash(i + vec3(0,1,1));
+        float n111 = hash(i + vec3(1,1,1));
+        return mix(
+          mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
+          mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y),
+          f.z
+        );
+      }
+      // Multi-octave fbm
+      float fbm(vec3 p) {
+        float s = 0.0; float a = 0.5;
+        for (int i = 0; i < 5; i++) {
+          s += a * noise(p);
+          p *= 2.1;
+          a *= 0.5;
+        }
+        return s;
+      }
+
+      void main() {
+        vec3 dir = normalize(vWorldPos);
+        // Polar-Skala für Milky-Way-band-look (entlang Equator-Plane)
+        float band = 1.0 - abs(dir.y) * 1.6;
+        band = max(0.0, band);
+
+        // Multi-scale noise · Milky Way-cloud-look
+        vec3 p1 = dir * 4.0;
+        vec3 p2 = dir * 12.0;
+        float c1 = fbm(p1);
+        float c2 = fbm(p2);
+        float density = (c1 * 0.7 + c2 * 0.3) * band;
+        density = pow(density, 2.5);
+
+        // Color-Mix: deep blue → magenta-purple in dichten Bereichen
+        vec3 deepBlue = vec3(0.04, 0.05, 0.12);
+        vec3 magenta  = vec3(0.55, 0.05, 0.32);
+        vec3 dust     = vec3(0.18, 0.08, 0.12);
+        vec3 col = mix(deepBlue, magenta, smoothstep(0.2, 0.7, density));
+        col = mix(col, dust, smoothstep(0.7, 1.0, density));
+        col *= density * 1.5;
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `,
+    side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.BackSide,
+    depthWrite: false
+  });
+  return new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(geo, mat);
+}
+const nebula = buildNebula();
+scene.add(nebula);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.07;
@@ -6062,8 +6199,11 @@ resize();
 const clock = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Clock();
 function animate() {
   requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
   controls.update();
-  cinematicPass.uniforms.uTime.value = clock.getElapsedTime();
+  cinematicPass.uniforms.uTime.value = t;
+  stars.material.uniforms.uTime.value = t;
+  nebula.rotation.y = t * 8e-3;
   composer.render();
 }
 (function setupPraegungPicker() {
