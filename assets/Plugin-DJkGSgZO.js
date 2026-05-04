@@ -1,60 +1,21 @@
+import { j as jsxRuntimeExports } from './jsx-runtime-dGY4lsZt.js';
 import { a as index_cjs, b as ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__ } from './ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
-
-var jsxRuntime = {exports: {}};
-
-var reactJsxRuntime_production = {};
-
-/**
- * @license React
- * react-jsx-runtime.production.js
- *
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"),
-  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-function jsxProd(type, config, maybeKey) {
-  var key = null;
-  undefined !== maybeKey && (key = "" + maybeKey);
-  undefined !== config.key && (key = "" + config.key);
-  if ("key" in config) {
-    maybeKey = {};
-    for (var propName in config)
-      "key" !== propName && (maybeKey[propName] = config[propName]);
-  } else maybeKey = config;
-  config = maybeKey.ref;
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: undefined !== config ? config : null,
-    props: maybeKey
-  };
-}
-reactJsxRuntime_production.Fragment = REACT_FRAGMENT_TYPE;
-reactJsxRuntime_production.jsx = jsxProd;
-reactJsxRuntime_production.jsxs = jsxProd;
-
-{
-  jsxRuntime.exports = reactJsxRuntime_production;
-}
-
-var jsxRuntimeExports = jsxRuntime.exports;
+import { b as ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__-D7cIg9rU.js';
+import { b as ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__-BZ_dI_FZ.js';
+import './_commonjsHelpers-B85MJLTf.js';
 
 // dev uses dynamic import to separate chunks
     
-    const {loadShare: loadShare$2} = index_cjs;
-    const {initPromise: initPromise$2} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
-    const res$2 = initPromise$2.then(_ => loadShare$2("@mui/material", {
+    const {loadShare} = index_cjs;
+    const {initPromise} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
+    const res = initPromise.then(_ => loadShare("@mui/material", {
     customShareInfo: {shareConfig:{
       singleton: true,
       strictVersion: false,
       requiredVersion: "^7.1.1"
     }}}));
-    const exportModule$2 = await res$2.then(factory => factory());
-    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__ = exportModule$2;
+    const exportModule = await res.then(factory => factory());
+    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__ = exportModule;
 
 const LogoUploader = () => (props) => {
   const dataUrl = props.selection?.data?.dataUrl;
@@ -111,32 +72,6 @@ const LogoUploader = () => (props) => {
     !dataUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__.Typography, { variant: "caption", color: "text.secondary", children: "PNG / JPG / SVG · transparenter Hintergrund empfohlen" })
   ] });
 };
-
-// dev uses dynamic import to separate chunks
-    
-    const {loadShare: loadShare$1} = index_cjs;
-    const {initPromise: initPromise$1} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
-    const res$1 = initPromise$1.then(_ => loadShare$1("react", {
-    customShareInfo: {shareConfig:{
-      singleton: true,
-      strictVersion: false,
-      requiredVersion: "19.1.1"
-    }}}));
-    const exportModule$1 = await res$1.then(factory => factory());
-    var ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__ = exportModule$1;
-
-// dev uses dynamic import to separate chunks
-    
-    const {loadShare} = index_cjs;
-    const {initPromise} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
-    const res = initPromise.then(_ => loadShare("three", {
-    customShareInfo: {shareConfig:{
-      singleton: true,
-      strictVersion: false,
-      requiredVersion: "^0.177.0"
-    }}}));
-    const exportModule = await res.then(factory => factory());
-    var ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__ = exportModule;
 
 const MM_TO_UNITS = 1 / 50;
 function SealFoil(props) {
