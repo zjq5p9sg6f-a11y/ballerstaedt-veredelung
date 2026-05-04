@@ -6000,7 +6000,7 @@ SAMPLE_LOGOS.forEach((logo) => {
     flex: 1; min-width: 0; padding: 8px 4px; font-size: 11px;
     background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.3);
   `;
-  btn.innerHTML = `<span style="font-size:10px; opacity:0.7; margin-right:4px;">📷</span>${logo.name}`;
+  btn.innerHTML = logo.name;
   btn.onclick = () => loadSampleLogo(logo.svg);
   sampleRow.appendChild(btn);
 });
