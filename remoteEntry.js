@@ -1,5 +1,5 @@
 import { i as init_1, b as ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__ } from './assets/ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
-import exposesMap from './assets/virtualExposes-BIde3fe5.js';
+import exposesMap from './assets/virtualExposes-Bx5YR_Na.js';
 import { _ as __vitePreload } from './assets/preload-helper-BazNuh42.js';
 
 const importMap = {
@@ -20,12 +20,22 @@ const importMap = {
         }
       ,
         "@mui/material": async () => {
-          let pkg = await __vitePreload(() => import('./assets/index-YzRbSrvs.js'),true?[]:undefined,import.meta.url);
+          let pkg = await __vitePreload(() => import('./assets/index-DKcO2DR1.js'),true?[]:undefined,import.meta.url);
           return pkg
         }
       ,
         "@mui/styled-engine": async () => {
           let pkg = await __vitePreload(() => import('./assets/index-D5f_E342.js'),true?[]:undefined,import.meta.url);
+          return pkg
+        }
+      ,
+        "@react-three/drei": async () => {
+          let pkg = await __vitePreload(() => import('./assets/index-DMmt0W5q.js'),true?[]:undefined,import.meta.url);
+          return pkg
+        }
+      ,
+        "@react-three/fiber": async () => {
+          let pkg = await __vitePreload(() => import('./assets/react-three-fiber.esm-Do72s4uC.js'),true?[]:undefined,import.meta.url);
           return pkg
         }
       ,
@@ -174,6 +184,58 @@ const importMap = {
             shareConfig: {
               singleton: true,
               requiredVersion: "^7.1.1"
+            }
+          }
+        ,
+          "@react-three/drei": {
+            name: "@react-three/drei",
+            version: "10.5.1",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["@react-three/drei"].loaded = true;
+              const {"@react-three/drei": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^10.1.2"
+            }
+          }
+        ,
+          "@react-three/fiber": {
+            name: "@react-three/fiber",
+            version: "9.2.0",
+            scope: ["default"],
+            loaded: false,
+            from: "ballerstaedt-veredelung",
+            async get () {
+              usedShared["@react-three/fiber"].loaded = true;
+              const {"@react-three/fiber": pkgDynamicImport} = importMap; 
+              const res = await pkgDynamicImport();
+              const exportModule = {...res};
+              // All npm packages pre-built by vite will be converted to esm
+              Object.defineProperty(exportModule, "__esModule", {
+                value: true,
+                enumerable: false
+              });
+              return function () {
+                return exportModule
+              }
+            },
+            shareConfig: {
+              singleton: true,
+              requiredVersion: "^9.1.2"
             }
           }
         ,

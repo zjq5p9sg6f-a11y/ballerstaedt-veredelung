@@ -1,21 +1,21 @@
 import { j as jsxRuntimeExports } from './jsx-runtime-dGY4lsZt.js';
 import { a as index_cjs, b as ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__ } from './ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
 import { b as ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__-D7cIg9rU.js';
-import { b as ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__-BZ_dI_FZ.js';
+import { b as ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__-UvYDSipU.js';
 import './_commonjsHelpers-B85MJLTf.js';
 
 // dev uses dynamic import to separate chunks
     
-    const {loadShare} = index_cjs;
-    const {initPromise} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
-    const res = initPromise.then(_ => loadShare("@mui/material", {
+    const {loadShare: loadShare$1} = index_cjs;
+    const {initPromise: initPromise$1} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
+    const res$1 = initPromise$1.then(_ => loadShare$1("@mui/material", {
     customShareInfo: {shareConfig:{
       singleton: true,
       strictVersion: false,
       requiredVersion: "^7.1.1"
     }}}));
-    const exportModule = await res.then(factory => factory());
-    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__ = exportModule;
+    const exportModule$1 = await res$1.then(factory => factory());
+    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__ = exportModule$1;
 
 const LogoUploader = () => (props) => {
   const dataUrl = props.selection?.data?.dataUrl;
@@ -72,6 +72,19 @@ const LogoUploader = () => (props) => {
     !dataUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_material__loadShare__.Typography, { variant: "caption", color: "text.secondary", children: "PNG / JPG / SVG · transparenter Hintergrund empfohlen" })
   ] });
 };
+
+// dev uses dynamic import to separate chunks
+    
+    const {loadShare} = index_cjs;
+    const {initPromise} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
+    const res = initPromise.then(_ => loadShare("@react-three/drei", {
+    customShareInfo: {shareConfig:{
+      singleton: true,
+      strictVersion: false,
+      requiredVersion: "^10.1.2"
+    }}}));
+    const exportModule = await res.then(factory => factory());
+    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_react_mf_2_three_mf_1_drei__loadShare__ = exportModule;
 
 const MM = 0.01;
 function laschePath(shape, edgeR, side = "right") {
@@ -422,7 +435,7 @@ const screenshot = ""+new URL('Image-lYiF6YAQ.png', import.meta.url).href+"";
 
 const extractImageUrl = (val) => {
   if (!val) return undefined;
-  if (typeof val === "string") return val;
+  if (typeof val === "string" && val.length > 0) return val;
   if (typeof val === "object") {
     if (val.url) return val.url;
     if (val.dataUrl) return val.dataUrl;
@@ -433,30 +446,99 @@ const extractImageUrl = (val) => {
   }
   return undefined;
 };
+function resolveValueFromAnyPath(props, candidates, validator) {
+  for (const key of candidates) {
+    const v = props?.[key];
+    if (v !== undefined && v !== null && (true)) {
+      return { value: v, source: `props.${key}` };
+    }
+  }
+  if (props?.context && typeof props.context === "object") {
+    for (const key of candidates) {
+      const v = props.context[key];
+      if (v !== undefined && v !== null && (true)) {
+        return { value: v, source: `props.context.${key}` };
+      }
+    }
+  }
+  if (props?.slots && typeof props.slots === "object") {
+    for (const key of candidates) {
+      const v = props.slots[key];
+      if (v !== undefined && v !== null && (true)) {
+        return { value: v, source: `props.slots.${key}` };
+      }
+    }
+  }
+  for (const actionKey of ["materialActions", "colorActions", "printActions"]) {
+    const arr = props?.[actionKey];
+    if (Array.isArray(arr)) {
+      for (const a of arr) {
+        if (!a) continue;
+        for (const key of candidates) {
+          if (a.id === key || a.name === key || a.key === key) {
+            const v = a.value ?? a.selected ?? a.current;
+            if (v !== undefined && v !== null && (true)) {
+              return { value: v, source: `${actionKey}[${key}].value` };
+            }
+          }
+        }
+      }
+    }
+  }
+  return { value: undefined, source: "default" };
+}
 const SealFoilDynamic = (props) => {
   const [diffuseTexture, setDiffuseTexture] = ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useState(null);
   const [normalMap, setNormalMap] = ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useState(null);
-  if (typeof window !== "undefined") {
-    console.group("%c[SealFoilPlugin] PROPS DEBUG", "background:#d4af37;color:#000;padding:2px 6px;font-weight:bold");
-    console.log("shape (raw):", props.shape, "  typeof:", typeof props.shape);
-    console.log("shape (JSON):", JSON.stringify(props.shape));
-    console.log("form (raw):", props.form, "  Form:", props.Form);
-    console.log("printLogoUrl:", props.printLogoUrl);
-    console.log("Logo_Druckbild:", props.Logo_Druckbild);
-    console.log("embossingMode:", props.embossingMode);
-    console.log("praegung / Prägung:", props.praegung, props["Prägung"]);
-    console.log("ALL prop keys:", Object.keys(props));
-    console.log("FULL props object:", props);
-    console.groupEnd();
-  }
-  const printLogoUrl = extractImageUrl(
-    props.printLogoUrl ?? props.logoUpload ?? props.logo ?? props["Logo / Druckbild"]
+  const shapeRes = ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useMemo(
+    () => resolveValueFromAnyPath(props, [
+      "shape",
+      "form",
+      "Form",
+      "Form_value",
+      "FormValue",
+      "FormIndex",
+      "shape_id"
+    ]),
+    [props.shape, props.form, props.Form, props.context, props.slots, props.materialActions]
   );
-  const embossingLogoUrl = extractImageUrl(
-    props.embossingLogoUrl ?? props.embossingLogo ?? props.praegung
+  const materialRes = ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useMemo(
+    () => resolveValueFromAnyPath(props, [
+      "materialPreset",
+      "material",
+      "Material",
+      "MaterialIndex",
+      "MaterialPreset"
+    ]),
+    [props.materialPreset, props.material, props.Material, props.context, props.slots, props.materialActions]
   );
+  const printLogoRaw = props.printLogoUrl ?? props.logoUpload ?? props.logo ?? props.Logo_Druckbild ?? props["Logo / Druckbild"] ?? props.context?.Logo_Druckbild ?? props.context?.printLogo;
+  const printLogoUrl = extractImageUrl(printLogoRaw);
+  const embossingRaw = props.embossingLogoUrl ?? props.embossingLogo ?? props.praegung ?? props["Prägung"] ?? props.context?.praegung;
+  const embossingLogoUrl = extractImageUrl(embossingRaw);
   const embossingMode = Boolean(props.embossingMode) || Boolean(embossingLogoUrl);
   const activeUrl = embossingMode ? embossingLogoUrl ?? printLogoUrl : printLogoUrl;
+  const normalizedShape = normalizeShape(shapeRes.value);
+  const normalizedMaterial = normalizeMaterial(materialRes.value);
+  if (typeof window !== "undefined") {
+    console.group(
+      "%c[SealFoilPlugin] PROPS DEBUG",
+      "background:#d4af37;color:#000;padding:2px 6px;font-weight:bold"
+    );
+    console.log("Resolved shape:", normalizedShape, "from:", shapeRes.source, "raw:", shapeRes.value);
+    console.log("Resolved material:", normalizedMaterial.label, "from:", materialRes.source);
+    console.log("printLogoUrl resolved:", printLogoUrl ? "YES" : "no");
+    console.log("embossingMode:", embossingMode);
+    console.log("--- raw inspection ---");
+    console.log("props.context:", props.context);
+    console.log("props.slots:", props.slots);
+    console.log("props.materialActions:", props.materialActions);
+    console.log("props.colorActions:", props.colorActions);
+    console.log("props.printActions:", props.printActions);
+    console.log("ALL prop keys:", Object.keys(props));
+    console.log("FULL props:", props);
+    console.groupEnd();
+  }
   ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useEffect(() => {
     let cancelled = false;
     if (!activeUrl) {
@@ -479,27 +561,54 @@ const SealFoilDynamic = (props) => {
       cancelled = true;
     };
   }, [activeUrl, embossingMode, props.embossStrength]);
-  const shape = props.shape ?? props.form ?? props["Form"] ?? props.formId ?? "ronde";
-  const materialPreset = props.materialPreset ?? props.material ?? props["Material"] ?? "alu_g";
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     "group",
     {
       position: props.position,
       scale: [props.width ?? 1, props.height ?? 1, props.depth ?? 1],
       userData: { modelId: props.id },
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        SealFoil,
-        {
-          shape,
-          diameterMm: props.diameterMm ?? 95,
-          materialPreset,
-          baseColor: props.baseColor,
-          metalness: props.metalness,
-          roughness: props.roughness,
-          diffuseTexture,
-          normalMap
-        }
-      )
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          SealFoil,
+          {
+            shape: normalizedShape,
+            diameterMm: props.diameterMm ?? 95,
+            materialPreset: normalizedMaterial.id,
+            baseColor: props.baseColor,
+            metalness: props.metalness,
+            roughness: props.roughness,
+            diffuseTexture,
+            normalMap
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ballerstaedt_mf_2_veredelung__loadShare___mf_0_react_mf_2_three_mf_1_drei__loadShare__.Html, { position: [0, 0.6, 0], center: true, distanceFactor: 5, occlude: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            style: {
+              background: "rgba(0,0,0,0.78)",
+              color: "white",
+              padding: "6px 10px",
+              borderRadius: 6,
+              fontFamily: '-apple-system, "SF Mono", ui-monospace, monospace',
+              fontSize: 11,
+              whiteSpace: "nowrap",
+              border: "1px solid rgba(212,175,55,0.6)",
+              pointerEvents: "none",
+              userSelect: "none"
+            },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: "#d4af37", fontWeight: 600 }, children: normalizedShape }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { opacity: 0.7, fontSize: 10 }, children: [
+                "from: ",
+                shapeRes.source,
+                " · raw:",
+                " ",
+                JSON.stringify(shapeRes.value)?.slice(0, 30)
+              ] })
+            ]
+          }
+        ) })
+      ]
     }
   );
 };

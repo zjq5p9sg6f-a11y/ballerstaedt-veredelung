@@ -2,6 +2,7 @@ import { b as ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__, R as 
 import { g as getDefaultExportFromCjs } from './_commonjsHelpers-B85MJLTf.js';
 import { a as index_cjs, b as ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__ } from './ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
 import { j as jsxRuntimeExports } from './jsx-runtime-dGY4lsZt.js';
+import { R as ReactDOM, b as ballerstaedt_mf_2_veredelung__loadShare__react_mf_2_dom__loadShare__ } from './ballerstaedt_mf_2_veredelung__loadShare__react_mf_2_dom__loadShare__-BJmpXyyL.js';
 import { _ as _extends } from './extends-mO86zOh3.js';
 
 const common = {
@@ -376,16 +377,16 @@ const THEME_ID = '$$material';
 
 // dev uses dynamic import to separate chunks
     
-    const {loadShare: loadShare$1} = index_cjs;
-    const {initPromise: initPromise$1} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
-    const res$1 = initPromise$1.then(_ => loadShare$1("@mui/styled-engine", {
+    const {loadShare} = index_cjs;
+    const {initPromise} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
+    const res = initPromise.then(_ => loadShare("@mui/styled-engine", {
     customShareInfo: {shareConfig:{
       singleton: true,
       strictVersion: false,
       requiredVersion: "^7.1.1"
     }}}));
-    const exportModule$1 = await res$1.then(factory => factory());
-    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_styled_mf_2_engine__loadShare__ = exportModule$1;
+    const exportModule = await res.then(factory => factory());
+    var ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_styled_mf_2_engine__loadShare__ = exportModule;
 
 const styledEngineStyled = /*@__PURE__*/getDefaultExportFromCjs(ballerstaedt_mf_2_veredelung__loadShare___mf_0_mui_mf_1_styled_mf_2_engine__loadShare__);
 
@@ -6691,21 +6692,6 @@ function _setPrototypeOf(t, e) {
 function _inheritsLoose(t, o) {
   t.prototype = Object.create(o.prototype), t.prototype.constructor = t, _setPrototypeOf(t, o);
 }
-
-// dev uses dynamic import to separate chunks
-    
-    const {loadShare} = index_cjs;
-    const {initPromise} = ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__;
-    const res = initPromise.then(_ => loadShare("react-dom", {
-    customShareInfo: {shareConfig:{
-      singleton: true,
-      strictVersion: false,
-      requiredVersion: "19.1.1"
-    }}}));
-    const exportModule = await res.then(factory => factory());
-    var ballerstaedt_mf_2_veredelung__loadShare__react_mf_2_dom__loadShare__ = exportModule;
-
-const ReactDOM = /*@__PURE__*/getDefaultExportFromCjs(ballerstaedt_mf_2_veredelung__loadShare__react_mf_2_dom__loadShare__);
 
 const config = {
   disabled: false
