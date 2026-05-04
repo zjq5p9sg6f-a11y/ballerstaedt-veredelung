@@ -5292,8 +5292,10 @@ const state = {
   diameter: 95,
   material: "alu_g",
   praegung: "glatt",
-  logoDataUrl: null,
-  embossingMode: false,
+  printLogoDataUrl: null,
+  // Logo als Druckbild (Diffuse-Map)
+  embossLogoDataUrl: null,
+  // Logo als Blindprägung (Normal-Map via Sobel)
   embossStrength: 4
 };
 let foilGroup = null;
@@ -5558,17 +5560,14 @@ function rebuildFoil() {
   }
   const matConfig = MATERIALS.find((m) => m.id === state.material);
   const isHotFoil = ["gold", "silber", "kupfer"].includes(state.material);
-  const hasLogo = !!state.logoDataUrl && !!logoDiffuseTexture;
+  const hasPrintLogo = !!state.printLogoDataUrl && !!logoDiffuseTexture;
   let mainMaterial;
-  if (isHotFoil && hasLogo) {
+  if (isHotFoil && hasPrintLogo) {
     const aluBase = MATERIALS.find((m) => m.id === "alu_g");
     const tempLogoDiff = logoDiffuseTexture;
-    const tempLogoNorm = logoNormalMap;
     logoDiffuseTexture = null;
-    logoNormalMap = state.embossingMode ? tempLogoNorm : null;
     mainMaterial = makeMaterial(aluBase);
     logoDiffuseTexture = tempLogoDiff;
-    logoNormalMap = tempLogoNorm;
   } else {
     mainMaterial = makeMaterial(matConfig);
   }
@@ -5605,7 +5604,7 @@ function rebuildFoil() {
       foilGroup = buildFlatFoil(rondeShape(d, false), mainMaterial);
       break;
   }
-  if (isHotFoil && hasLogo && !state.embossingMode) {
+  if (isHotFoil && hasPrintLogo) {
     addHotFoilOverlay(foilGroup, d, matConfig);
   }
   scene.add(foilGroup);
@@ -5665,19 +5664,18 @@ function addHotFoilOverlay(group, diameter, matConfig) {
 function updateInfoLabel() {
   const shape = SHAPES.find((s) => s.id === state.shape);
   const mat = MATERIALS.find((m) => m.id === state.material);
+  const praegung = PRAEGUNGEN.find((p) => p.id === state.praegung);
   const isHotFoil = ["gold", "silber", "kupfer"].includes(state.material);
-  const hasLogo = !!state.logoDataUrl;
-  let veredel = "";
-  if (hasLogo) {
-    if (state.embossingMode) {
-      veredel = " · Blindprägung";
-    } else if (isHotFoil) {
-      veredel = ` · Logo ${mat.label}`;
-    } else {
-      veredel = " · Druck";
-    }
+  const hasPrint = !!state.printLogoDataUrl;
+  const hasEmboss = !!state.embossLogoDataUrl;
+  const veredelParts = [];
+  if (hasPrint) {
+    veredelParts.push(isHotFoil ? `Logo ${mat.label}` : "Druck");
   }
-  const matLabel = isHotFoil && hasLogo ? "Alu glänzend" : mat.label;
+  if (hasEmboss) veredelParts.push("Logo-Prägung");
+  if (praegung && praegung.id !== "glatt") veredelParts.push(praegung.label);
+  const veredel = veredelParts.length ? " · " + veredelParts.join(" · ") : "";
+  const matLabel = isHotFoil && hasPrint ? "Alu glänzend" : mat.label;
   document.getElementById("canvasInfo").innerHTML = `<b>${shape.label}</b> ${shape.code !== "—" ? `[${shape.code}]` : ""} · Ø${state.diameter}mm · ${matLabel}${veredel}`;
 }
 function imageToNormalMapCanvas(img, strength = 4) {
@@ -5732,14 +5730,13 @@ function loadImage(dataUrl) {
     img.src = dataUrl;
   });
 }
-async function refreshLogoTextures() {
-  if (!state.logoDataUrl) {
+async function refreshPrintLogo() {
+  if (!state.printLogoDataUrl) {
     logoDiffuseTexture = null;
-    logoNormalMap = null;
     rebuildFoil();
     return;
   }
-  const img = await loadImage(state.logoDataUrl);
+  const img = await loadImage(state.printLogoDataUrl);
   const diffCanvas = document.createElement("canvas");
   diffCanvas.width = img.width;
   diffCanvas.height = img.height;
@@ -5747,6 +5744,15 @@ async function refreshLogoTextures() {
   logoDiffuseTexture = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CanvasTexture(diffCanvas);
   logoDiffuseTexture.colorSpace = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SRGBColorSpace;
   logoDiffuseTexture.needsUpdate = true;
+  rebuildFoil();
+}
+async function refreshEmbossLogo() {
+  if (!state.embossLogoDataUrl) {
+    logoNormalMap = null;
+    rebuildFoil();
+    return;
+  }
+  const img = await loadImage(state.embossLogoDataUrl);
   const normCanvas = imageToNormalMapCanvas(img, state.embossStrength);
   logoNormalMap = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CanvasTexture(normCanvas);
   logoNormalMap.colorSpace = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.NoColorSpace;
@@ -5809,20 +5815,6 @@ document.getElementById("diameterSlider").addEventListener("input", (e) => {
   document.getElementById("diameterValue").textContent = state.diameter;
   rebuildFoil();
 });
-document.getElementById("logoBtn").onclick = () => document.getElementById("logoInput").click();
-document.getElementById("logoInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    state.logoDataUrl = reader.result;
-    const prev = document.getElementById("logoPreview");
-    prev.style.display = "block";
-    prev.style.backgroundImage = `url(${state.logoDataUrl})`;
-    refreshLogoTextures();
-  };
-  reader.readAsDataURL(file);
-});
 const SAMPLE_LOGOS = [
   {
     name: "BaCo",
@@ -5837,26 +5829,70 @@ const SAMPLE_LOGOS = [
     svg: `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='40' y='15' width='20' height='70' fill='black' rx='2'/><rect x='15' y='40' width='70' height='20' fill='black' rx='2'/></svg>`
   }
 ];
-function loadSampleLogo(svgString) {
-  const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
-  state.logoDataUrl = dataUrl;
-  const prev = document.getElementById("logoPreview");
-  prev.style.display = "block";
-  prev.style.backgroundImage = `url(${dataUrl})`;
-  refreshLogoTextures();
+function svgToDataUrl(svg) {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
-const sampleRow = document.getElementById("sampleLogosRow");
-SAMPLE_LOGOS.forEach((logo) => {
-  const btn = document.createElement("button");
-  btn.className = "btn";
-  btn.style.cssText = `
-    flex: 1; min-width: 0; padding: 8px 4px; font-size: 11px;
-    background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.3);
-  `;
-  btn.innerHTML = logo.name;
-  btn.onclick = () => loadSampleLogo(logo.svg);
-  sampleRow.appendChild(btn);
+function setupLogoSlot(opts) {
+  const btn = document.getElementById(opts.btnId);
+  const input = document.getElementById(opts.inputId);
+  const preview = document.getElementById(opts.previewId);
+  const sampleRow = document.getElementById(opts.sampleRowId);
+  function setDataUrl(url) {
+    state[opts.stateKey] = url;
+    if (url) {
+      preview.style.display = "block";
+      preview.style.backgroundImage = `url(${url})`;
+    } else {
+      preview.style.display = "none";
+      preview.style.backgroundImage = "";
+    }
+    opts.refresh();
+  }
+  btn.onclick = () => input.click();
+  input.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setDataUrl(reader.result);
+    reader.readAsDataURL(file);
+  });
+  SAMPLE_LOGOS.forEach((logo) => {
+    const sBtn = document.createElement("button");
+    sBtn.className = "btn";
+    sBtn.style.cssText = `
+      flex: 1; min-width: 0; padding: 8px 4px; font-size: 12px;
+      background: rgba(230,0,126,0.06); border-color: rgba(230,0,126,0.25);
+    `;
+    sBtn.innerHTML = logo.name;
+    sBtn.onclick = () => setDataUrl(svgToDataUrl(logo.svg));
+    sampleRow.appendChild(sBtn);
+  });
+  return { setDataUrl };
+}
+setupLogoSlot({
+  btnId: "printLogoBtn",
+  inputId: "printLogoInput",
+  previewId: "printLogoPreview",
+  sampleRowId: "printSampleLogosRow",
+  stateKey: "printLogoDataUrl",
+  refresh: refreshPrintLogo
 });
+setupLogoSlot({
+  btnId: "embossLogoBtn",
+  inputId: "embossLogoInput",
+  previewId: "embossLogoPreview",
+  sampleRowId: "embossSampleLogosRow",
+  stateKey: "embossLogoDataUrl",
+  refresh: refreshEmbossLogo
+});
+function updateEmbossStrengthVisibility() {
+  document.getElementById("embossStrengthGroup").style.display = state.embossLogoDataUrl ? "" : "none";
+}
+const _origRefreshEmboss = refreshEmbossLogo;
+globalThis.refreshEmbossLogo = async () => {
+  await _origRefreshEmboss();
+  updateEmbossStrengthVisibility();
+};
 let _previousFoilGroup = null;
 const _origRebuild = rebuildFoil;
 function rebuildFoilWithFade() {
@@ -5915,42 +5951,36 @@ function rebuildFoilWithFade() {
   }
 }
 window.rebuildFoil = rebuildFoilWithFade;
-const switchEl = document.getElementById("embossSwitch");
-const toggleRowEl = document.getElementById("embossToggle");
-function setEmboss(v) {
-  state.embossingMode = v;
-  switchEl.classList.toggle("on", v);
-  document.getElementById("embossDescr").textContent = v ? "An = Logo als Relief" : "Aus = Logo als Druckbild";
-  document.getElementById("embossStrengthGroup").style.display = v ? "" : "none";
-  refreshLogoTextures();
-}
-toggleRowEl.onclick = (e) => {
-  if (e.target.closest("input, button")) return;
-  setEmboss(!state.embossingMode);
-};
 document.getElementById("embossStrengthSlider").addEventListener("input", (e) => {
   state.embossStrength = +e.target.value;
   document.getElementById("embossStrengthValue").textContent = state.embossStrength.toFixed(1);
-  if (state.embossingMode) refreshLogoTextures();
+  if (state.embossLogoDataUrl) refreshEmbossLogo();
 });
 document.getElementById("resetBtn").onclick = () => {
   state.shape = "ronde";
   state.diameter = 95;
   state.material = "alu_g";
-  state.logoDataUrl = null;
-  state.embossingMode = false;
+  state.praegung = "glatt";
+  state.printLogoDataUrl = null;
+  state.embossLogoDataUrl = null;
   state.embossStrength = 4;
-  document.getElementById("logoPreview").style.display = "none";
-  document.getElementById("logoInput").value = "";
-  document.getElementById("diameterSlider").value = 95;
+  ["printLogoPreview", "embossLogoPreview"].forEach((id) => {
+    const el = document.getElementById(id);
+    el.style.display = "none";
+    el.style.backgroundImage = "";
+  });
+  ["printLogoInput", "embossLogoInput"].forEach((id) => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("diameterSlider").value = "95";
   document.getElementById("diameterValue").textContent = "95";
-  document.getElementById("embossStrengthSlider").value = 4;
+  document.getElementById("embossStrengthSlider").value = "4";
   document.getElementById("embossStrengthValue").textContent = "4.0";
-  switchEl.classList.remove("on");
-  document.getElementById("embossDescr").textContent = "Aus = Logo als Druckbild";
   document.getElementById("embossStrengthGroup").style.display = "none";
-  document.querySelectorAll(".form-btn").forEach((b) => b.classList.toggle("active", b.dataset.id === "ronde"));
-  document.querySelectorAll(".chip").forEach((c) => {
+  document.querySelectorAll(".form-btn").forEach(
+    (b) => b.classList.toggle("active", b.dataset.id === "ronde")
+  );
+  document.querySelectorAll("#materialPicker .chip").forEach((c) => {
     const mc = MATERIALS.find((mm) => mm.id === c.dataset.id);
     const active = c.dataset.id === "alu_g";
     c.classList.toggle("active", active);
@@ -5958,7 +5988,13 @@ document.getElementById("resetBtn").onclick = () => {
     c.style.background = active ? mc.ui : "";
     c.style.color = active ? "#1a1a1a" : "";
   });
-  document.getElementById("shapeLabel").textContent = "Ronde (R)";
+  document.querySelectorAll("#praegungRow .chip").forEach((c) => {
+    const active = c.dataset.id === "glatt";
+    c.classList.toggle("active", active);
+    c.style.background = active ? "var(--magenta)" : "";
+    c.style.borderColor = active ? "var(--magenta)" : "";
+    c.style.color = active ? "#fff" : "";
+  });
   logoDiffuseTexture = null;
   logoNormalMap = null;
   rebuildFoil();
@@ -6060,8 +6096,8 @@ function animate() {
 (function setupPraegungPicker() {
   const drawerBody = document.querySelector(".drawer-body");
   if (!drawerBody || document.getElementById("praegungRow")) return;
-  const logoBtn = document.getElementById("logoBtn");
-  const logoGroup = logoBtn ? logoBtn.closest(".group") : null;
+  const printLogoBtn = document.getElementById("printLogoBtn");
+  const logoGroup = printLogoBtn ? printLogoBtn.closest(".group") : null;
   const praegungSection = document.createElement("div");
   praegungSection.className = "group";
   praegungSection.innerHTML = `

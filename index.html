@@ -445,7 +445,7 @@
         }
       }
     </script>
-    <script type="module" crossorigin src="./assets/index-CFFkxcyP.js"></script>
+    <script type="module" crossorigin src="./assets/index-DQozI7Aj.js"></script>
   </head>
   <body>
     <!-- Passwort-Gate -->
@@ -539,22 +539,19 @@
         </div>
 
         <div class="group">
-          <div class="group-title"><span>Logo / Druckbild</span></div>
-          <button class="btn" id="logoBtn">Logo wählen (PNG/JPG/SVG)</button>
-          <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none" />
-          <div class="logo-preview" id="logoPreview" style="display:none"></div>
-          <div id="sampleLogosRow" style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;"></div>
+          <div class="group-title"><span>Logo · Druckbild</span></div>
+          <button class="btn" id="printLogoBtn">Druckbild wählen (PNG/JPG/SVG)</button>
+          <input type="file" id="printLogoInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none" />
+          <div class="logo-preview" id="printLogoPreview" style="display:none"></div>
+          <div id="printSampleLogosRow" style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;"></div>
         </div>
 
         <div class="group">
-          <div class="group-title"><span>Druck oder Prägung</span></div>
-          <div class="toggle-row" id="embossToggle">
-            <div class="label-text">
-              <strong>Blindprägung</strong>
-              <small id="embossDescr">Aus = Logo als Druckbild</small>
-            </div>
-            <div class="toggle-switch" id="embossSwitch"></div>
-          </div>
+          <div class="group-title"><span>Logo · Prägung</span></div>
+          <button class="btn" id="embossLogoBtn">Prägung wählen (PNG/JPG/SVG)</button>
+          <input type="file" id="embossLogoInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none" />
+          <div class="logo-preview" id="embossLogoPreview" style="display:none"></div>
+          <div id="embossSampleLogosRow" style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;"></div>
         </div>
 
         <div class="group" id="embossStrengthGroup" style="display:none">
