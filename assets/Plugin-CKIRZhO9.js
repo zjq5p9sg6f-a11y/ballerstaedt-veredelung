@@ -561,6 +561,18 @@ const SealFoilDynamic = (props) => {
       cancelled = true;
     };
   }, [activeUrl, embossingMode, props.embossStrength]);
+  const [internalShape, setInternalShape] = ballerstaedt_mf_2_veredelung__loadShare__react__loadShare__.useState(null);
+  const effectiveShape = internalShape ?? normalizedShape;
+  const SHAPES = [
+    { id: "ronde", label: "Ronde", code: "R" },
+    { id: "ronde-lasche", label: "Ronde·Lasche", code: "AR" },
+    { id: "kappe", label: "Kappe", code: "K" },
+    { id: "kappe-lasche", label: "Kappe·Lasche", code: "AK" },
+    { id: "verformt-lasche", label: "Verformt·Lasche", code: "AL" },
+    { id: "verformte-ronde", label: "Verformt", code: "—" },
+    { id: "induktionssiegel", label: "Induktion", code: "IR" },
+    { id: "baco-bond", label: "BaCo Bond", code: "PSL" }
+  ];
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     "group",
     {
@@ -571,7 +583,7 @@ const SealFoilDynamic = (props) => {
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           SealFoil,
           {
-            shape: normalizedShape,
+            shape: effectiveShape,
             diameterMm: props.diameterMm ?? 95,
             materialPreset: normalizedMaterial.id,
             baseColor: props.baseColor,
@@ -581,31 +593,45 @@ const SealFoilDynamic = (props) => {
             normalMap
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(ballerstaedt_mf_2_veredelung__loadShare___mf_0_react_mf_2_three_mf_1_drei__loadShare__.Html, { position: [0, 0.6, 0], center: true, distanceFactor: 5, occlude: false, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ballerstaedt_mf_2_veredelung__loadShare___mf_0_react_mf_2_three_mf_1_drei__loadShare__.Html, { position: [0, 0.85, 0], center: true, distanceFactor: 6, occlude: false, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           "div",
           {
             style: {
-              background: "rgba(0,0,0,0.78)",
-              color: "white",
-              padding: "6px 10px",
-              borderRadius: 6,
-              fontFamily: '-apple-system, "SF Mono", ui-monospace, monospace',
-              fontSize: 11,
-              whiteSpace: "nowrap",
-              border: "1px solid rgba(212,175,55,0.6)",
-              pointerEvents: "none",
+              display: "flex",
+              gap: 4,
+              padding: 6,
+              background: "rgba(0,0,0,0.75)",
+              backdropFilter: "blur(8px)",
+              borderRadius: 8,
+              border: "1px solid rgba(212,175,55,0.4)",
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif',
               userSelect: "none"
             },
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: "#d4af37", fontWeight: 600 }, children: normalizedShape }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { opacity: 0.7, fontSize: 10 }, children: [
-                "from: ",
-                shapeRes.source,
-                " · raw:",
-                " ",
-                JSON.stringify(shapeRes.value)?.slice(0, 30)
-              ] })
-            ]
+            children: SHAPES.map((s) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                onClick: (e) => {
+                  e.stopPropagation();
+                  setInternalShape(s.id);
+                },
+                style: {
+                  background: effectiveShape === s.id ? "#d4af37" : "rgba(255,255,255,0.08)",
+                  color: effectiveShape === s.id ? "#1a1a1a" : "white",
+                  border: "none",
+                  padding: "5px 9px",
+                  borderRadius: 5,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s"
+                },
+                title: `${s.label} (${s.code})`,
+                children: s.label
+              },
+              s.id
+            ))
           }
         ) })
       ]

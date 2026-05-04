@@ -2420,6 +2420,98 @@ document.getElementById("logoInput").addEventListener("change", (e) => {
   };
   reader.readAsDataURL(file);
 });
+const SAMPLE_LOGOS = [
+  {
+    name: "BaCo",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'><text x='100' y='72' text-anchor='middle' font-family='Georgia, serif' font-size='62' font-weight='700' fill='black' letter-spacing='-2'>BaCo</text></svg>`
+  },
+  {
+    name: "Krone",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M20 70 L25 40 L40 60 L50 30 L60 60 L75 40 L80 70 Z' fill='black' stroke='black' stroke-width='2' stroke-linejoin='round'/><circle cx='25' cy='40' r='4' fill='black'/><circle cx='50' cy='30' r='4' fill='black'/><circle cx='75' cy='40' r='4' fill='black'/><rect x='18' y='73' width='64' height='6' fill='black'/></svg>`
+  },
+  {
+    name: "Pharma",
+    svg: `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='40' y='15' width='20' height='70' fill='black' rx='2'/><rect x='15' y='40' width='70' height='20' fill='black' rx='2'/></svg>`
+  }
+];
+function loadSampleLogo(svgString) {
+  const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
+  state.logoDataUrl = dataUrl;
+  const prev = document.getElementById("logoPreview");
+  prev.style.display = "block";
+  prev.style.backgroundImage = `url(${dataUrl})`;
+  refreshLogoTextures();
+}
+const sampleRow = document.getElementById("sampleLogosRow");
+SAMPLE_LOGOS.forEach((logo) => {
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.style.cssText = `
+    flex: 1; min-width: 0; padding: 8px 4px; font-size: 11px;
+    background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.3);
+  `;
+  btn.innerHTML = `<span style="font-size:10px; opacity:0.7; margin-right:4px;">📷</span>${logo.name}`;
+  btn.onclick = () => loadSampleLogo(logo.svg);
+  sampleRow.appendChild(btn);
+});
+let _previousFoilGroup = null;
+const _origRebuild = rebuildFoil;
+function rebuildFoilWithFade() {
+  if (foilGroup) {
+    _previousFoilGroup = foilGroup;
+    let opacity = 1;
+    const fadeOut = setInterval(() => {
+      opacity -= 0.18;
+      if (opacity <= 0) {
+        clearInterval(fadeOut);
+        if (_previousFoilGroup) {
+          scene.remove(_previousFoilGroup);
+          _previousFoilGroup.traverse((c) => {
+            if (c.geometry) c.geometry.dispose();
+            if (c.material) {
+              if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose());
+              else c.material.dispose();
+            }
+          });
+          _previousFoilGroup = null;
+        }
+      }
+      if (_previousFoilGroup) {
+        _previousFoilGroup.traverse((c) => {
+          if (c.material) {
+            c.material.transparent = true;
+            c.material.opacity = Math.max(0, opacity);
+          }
+        });
+      }
+    }, 16);
+  }
+  foilGroup = null;
+  _origRebuild();
+  if (foilGroup) {
+    let inOpacity = 0;
+    foilGroup.traverse((c) => {
+      if (c.material) {
+        c.material.transparent = true;
+        c.material.opacity = 0;
+      }
+    });
+    const fadeIn = setInterval(() => {
+      inOpacity += 0.18;
+      if (inOpacity >= 1) {
+        clearInterval(fadeIn);
+        inOpacity = 1;
+        foilGroup.traverse((c) => {
+          if (c.material) c.material.transparent = false;
+        });
+      }
+      foilGroup.traverse((c) => {
+        if (c.material) c.material.opacity = Math.min(1, inOpacity);
+      });
+    }, 16);
+  }
+}
+window.rebuildFoil = rebuildFoilWithFade;
 const switchEl = document.getElementById("embossSwitch");
 const toggleRowEl = document.getElementById("embossToggle");
 function setEmboss(v) {
