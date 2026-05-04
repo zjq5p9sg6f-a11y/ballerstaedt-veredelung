@@ -5369,9 +5369,11 @@ controls.autoRotateSpeed = 0.5;
 let autoRotateResumeTimer = null;
 controls.addEventListener("start", () => {
   controls.autoRotate = false;
+  document.body.classList.add("dragging");
   if (autoRotateResumeTimer) clearTimeout(autoRotateResumeTimer);
 });
 controls.addEventListener("end", () => {
+  document.body.classList.remove("dragging");
   if (autoRotateResumeTimer) clearTimeout(autoRotateResumeTimer);
   autoRotateResumeTimer = setTimeout(() => {
     controls.autoRotate = true;

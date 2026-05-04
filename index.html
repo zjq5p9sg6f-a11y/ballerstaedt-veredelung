@@ -413,12 +413,16 @@
         letter-spacing: 0.06em; line-height: 1.7;
       }
 
-      /*  ╭─ Idle-fade · UI verschwindet sanft bei Inaktivität ─╮ */
+      /*  ╭─ Auto-fade · UI verschwindet während Drag + Idle ─╮ */
       .auto-fade {
         opacity: 1;
-        transition: opacity 0.6s ease;
+        transition: opacity 0.45s ease;
       }
       body.idle .auto-fade { opacity: 0.18; }
+      /* Während Folie gedreht wird → fast komplett transparent für freie Sicht */
+      body.dragging .auto-fade { opacity: 0.04; pointer-events: none; }
+      /* Drawer voll sichtbar bei Mouse-Hover (überschreibt fade) */
+      .drawer:hover { opacity: 1 !important; pointer-events: auto !important; }
 
       @media (max-width: 720px) {
         .brand { font-size: 18px; left: 22px; top: 22px; letter-spacing: 0.12em; }
@@ -437,7 +441,7 @@
         }
       }
     </script>
-    <script type="module" crossorigin src="./assets/index-BTh4zZg3.js"></script>
+    <script type="module" crossorigin src="./assets/index-B1WXUnV6.js"></script>
   </head>
   <body>
     <!-- Passwort-Gate -->
@@ -502,7 +506,7 @@
 
     <!-- Drawer (slide from right) -->
     <div class="drawer-overlay" id="drawerOverlay"></div>
-    <aside class="drawer controls" id="drawer">
+    <aside class="drawer controls auto-fade" id="drawer">
       <div class="drawer-header">
         <h2>Konfiguration</h2>
         <button class="close" id="closeDrawer" aria-label="Schließen">×</button>
