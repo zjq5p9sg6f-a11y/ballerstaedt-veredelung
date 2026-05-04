@@ -2234,48 +2234,128 @@ function rebuildFoil() {
     disposeGroup(foilGroup);
   }
   const matConfig = MATERIALS.find((m) => m.id === state.material);
-  const material = makeMaterial(matConfig);
+  const isHotFoil = ["gold", "silber", "kupfer"].includes(state.material);
+  const hasLogo = !!state.logoDataUrl && !!logoDiffuseTexture;
+  let mainMaterial;
+  if (isHotFoil && hasLogo) {
+    const aluBase = MATERIALS.find((m) => m.id === "alu_g");
+    const tempLogoDiff = logoDiffuseTexture;
+    const tempLogoNorm = logoNormalMap;
+    logoDiffuseTexture = null;
+    logoNormalMap = state.embossingMode ? tempLogoNorm : null;
+    mainMaterial = makeMaterial(aluBase);
+    logoDiffuseTexture = tempLogoDiff;
+    logoNormalMap = tempLogoNorm;
+  } else {
+    mainMaterial = makeMaterial(matConfig);
+  }
   const d = state.diameter;
   switch (state.shape) {
     case "ronde":
-      foilGroup = buildFlatFoil(rondeShape(d, false), material);
+      foilGroup = buildFlatFoil(rondeShape(d, false), mainMaterial);
       break;
     case "ronde-lasche":
-      foilGroup = buildFlatFoil(rondeShape(d, true), material);
+      foilGroup = buildFlatFoil(rondeShape(d, true), mainMaterial);
       break;
     case "kappe":
-      foilGroup = buildKappe(d, material, false);
+      foilGroup = buildKappe(d, mainMaterial, false);
       break;
     case "kappe-lasche":
-      foilGroup = buildKappe(d, material, true);
+      foilGroup = buildKappe(d, mainMaterial, true);
       break;
     case "verformt-lasche":
-      foilGroup = buildFlatFoil(ovalShape(d, true), material);
+      foilGroup = buildFlatFoil(ovalShape(d, true), mainMaterial);
       break;
     case "verformte-ronde":
-      foilGroup = buildFlatFoil(ovalShape(d, false), material);
+      foilGroup = buildFlatFoil(ovalShape(d, false), mainMaterial);
       break;
     case "induktionssiegel":
-      foilGroup = buildInduktionssiegel(d, material);
+      foilGroup = buildInduktionssiegel(d, mainMaterial);
       break;
     case "baco-bond":
-      foilGroup = buildBacoBond(d, material);
+      foilGroup = buildBacoBond(d, mainMaterial);
       break;
     case "rollenware":
-      foilGroup = buildRollenware(d, material);
+      foilGroup = buildRollenware(d, mainMaterial);
       break;
     default:
-      foilGroup = buildFlatFoil(rondeShape(d, false), material);
+      foilGroup = buildFlatFoil(rondeShape(d, false), mainMaterial);
       break;
+  }
+  if (isHotFoil && hasLogo && !state.embossingMode) {
+    addHotFoilOverlay(foilGroup, d, matConfig);
   }
   scene.add(foilGroup);
   updateInfoLabel();
 }
+function addHotFoilOverlay(group, diameter, matConfig) {
+  const r = diameter / 2 * MM;
+  const hotFoilMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
+    color: new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Color(matConfig.color),
+    metalness: 1,
+    roughness: matConfig.roughness * 0.7,
+    alphaMap: logoDiffuseTexture,
+    map: logoDiffuseTexture,
+    transparent: true,
+    alphaTest: 0.05,
+    side: ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DoubleSide,
+    envMapIntensity: 1.8,
+    clearcoat: 0.4,
+    clearcoatRoughness: 0.1
+  });
+  let overlayGeo = null;
+  switch (state.shape) {
+    case "ronde":
+      overlayGeo = rondeShape(diameter, false);
+      break;
+    case "ronde-lasche":
+      overlayGeo = rondeShape(diameter, true);
+      break;
+    case "verformte-ronde":
+      overlayGeo = ovalShape(diameter, false);
+      break;
+    case "verformt-lasche":
+      overlayGeo = ovalShape(diameter, true);
+      break;
+    case "induktionssiegel":
+      overlayGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96);
+      break;
+    case "baco-bond":
+      overlayGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96);
+      break;
+    case "kappe":
+    case "kappe-lasche":
+      overlayGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(r, 96);
+      break;
+    case "rollenware":
+      overlayGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PlaneGeometry(r * 4 * 0.8, r * 0.6);
+      break;
+    default:
+      overlayGeo = rondeShape(diameter, false);
+      break;
+  }
+  const overlay = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(overlayGeo, hotFoilMat);
+  overlay.rotation.x = -Math.PI / 2;
+  overlay.position.y = state.shape === "kappe" || state.shape === "kappe-lasche" ? 15e-4 : 9e-4;
+  group.add(overlay);
+}
 function updateInfoLabel() {
   const shape = SHAPES.find((s) => s.id === state.shape);
   const mat = MATERIALS.find((m) => m.id === state.material);
-  const veredel = state.logoDataUrl ? state.embossingMode ? " · Blindprägung" : " · Druck" : "";
-  document.getElementById("canvasInfo").innerHTML = `<b>${shape.label}</b> ${shape.code !== "—" ? `[${shape.code}]` : ""} · Ø${state.diameter}mm · ${mat.label}${veredel}`;
+  const isHotFoil = ["gold", "silber", "kupfer"].includes(state.material);
+  const hasLogo = !!state.logoDataUrl;
+  let veredel = "";
+  if (hasLogo) {
+    if (state.embossingMode) {
+      veredel = " · Blindprägung";
+    } else if (isHotFoil) {
+      veredel = ` · Heißfolie ${mat.label.replace("-Lack", "")}`;
+    } else {
+      veredel = " · Druck";
+    }
+  }
+  const matLabel = isHotFoil && hasLogo ? "Alu glänzend" : mat.label;
+  document.getElementById("canvasInfo").innerHTML = `<b>${shape.label}</b> ${shape.code !== "—" ? `[${shape.code}]` : ""} · Ø${state.diameter}mm · ${matLabel}${veredel}`;
 }
 function imageToNormalMapCanvas(img, strength = 4) {
   const w = img.width, h = img.height;
