@@ -5324,32 +5324,43 @@ new RGBELoader().setPath("./textures/").load(
     console.warn("[HDR] Fallback auf RoomEnvironment", err);
   }
 );
-const keyLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16773590, 1);
-keyLight.position.set(2.8, 5.5, 3.2);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(2048, 2048);
-keyLight.shadow.bias = -2e-4;
-keyLight.shadow.radius = 8;
-keyLight.shadow.camera.near = 0.1;
-keyLight.shadow.camera.far = 12;
-keyLight.shadow.camera.left = -2;
-keyLight.shadow.camera.right = 2;
-keyLight.shadow.camera.top = 2;
-keyLight.shadow.camera.bottom = -2;
-scene.add(keyLight);
-const rimLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(11060479, 0.4);
-rimLight.position.set(-1.5, 1, -3);
-scene.add(rimLight);
+const beautydish = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SpotLight(
+  16775406,
+  // sehr leicht warm (5500K-Tageslicht-Look)
+  3.2,
+  // intensity
+  5,
+  // distance
+  Math.PI / 7.5,
+  // cone angle ~24° (typisch für 50cm Beautydish auf 1.5m Distanz)
+  0.55,
+  // penumbra · halbweicher Rand (nicht hard, nicht so soft wie Box)
+  1.6
+  // decay
+);
+beautydish.position.set(0.4, 2.6, 1.2);
+beautydish.target.position.set(0, 0, 0);
+beautydish.castShadow = true;
+beautydish.shadow.mapSize.set(2048, 2048);
+beautydish.shadow.bias = -2e-4;
+beautydish.shadow.radius = 4;
+beautydish.shadow.camera.near = 0.1;
+beautydish.shadow.camera.far = 8;
+scene.add(beautydish);
+scene.add(beautydish.target);
+const fillReflector = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16775406, 0.25);
+fillReflector.position.set(-1.8, 0.6, 0.8);
+scene.add(fillReflector);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.VSMShadowMap;
-renderer.toneMappingExposure = 1.15;
-const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(4, 128);
+renderer.toneMappingExposure = 1;
+const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(5, 128);
 const floorMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshPhysicalMaterial({
-  color: 526345,
-  metalness: 0.3,
-  roughness: 0.55,
-  envMapIntensity: 0.4,
-  clearcoat: 0.2
+  color: 789518,
+  metalness: 0.05,
+  roughness: 0.85,
+  envMapIntensity: 0.15
+  // weniger HDR-Reflexion am Boden
 });
 const floor = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
@@ -5965,28 +5976,30 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloomPass = new UnrealBloomPass(
   new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Vector2(window.innerWidth, window.innerHeight),
-  0.55,
-  // strength
-  0.55,
-  // radius — größere weiche Halo
-  0.78
-  // threshold
+  0.22,
+  // strength · spürbar dezenter
+  0.4,
+  // radius
+  0.92
+  // threshold · nur sehr helle Spots
 );
 composer.addPass(bloomPass);
 const cinematicShader = {
   uniforms: {
     tDiffuse: { value: null },
     uTime: { value: 0 },
-    uVigStr: { value: 0.85 },
-    // Vignette-Stärke
-    uVigSize: { value: 0.5 },
-    // Vignette-Radius
-    uGrain: { value: 0.025 },
-    // Film-Grain-Intensität
-    uTint: { value: new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Vector3(1.02, 0.99, 0.96) },
-    // warm-gold tint
-    uContrast: { value: 1.08 },
-    uSatur: { value: 1.06 }
+    uVigStr: { value: 0.35 },
+    // dezent
+    uVigSize: { value: 0.65 },
+    // weicher Übergang
+    uGrain: { value: 4e-3 },
+    // kaum sichtbar
+    uTint: { value: new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Vector3(1, 1, 1) },
+    // neutral
+    uContrast: { value: 1.02 },
+    // minimal
+    uSatur: { value: 1 }
+    // unverändert
   },
   vertexShader: `
     varying vec2 vUv;
