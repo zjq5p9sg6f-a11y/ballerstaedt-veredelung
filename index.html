@@ -8,296 +8,411 @@
     <meta name="description" content="Ballerstaedt Siegelverschluss-Konfigurator — Veredelungen in 3D erlebbar: Form, Material, Logo, Prägung." />
     <title>Ballerstaedt · Siegelverschluss-Konfigurator</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
+      /*  Design-System · golden-ratio φ=1.618, Bauhaus-Apple-Disziplin
+          Spacing-Skala:  4 · 6 · 10 · 16 · 26 · 42 · 68 · 110 (φ-Multiplikatoren)
+          Type-Scale:    11 · 13 · 17 · 27 · 44 · 71 (φ-cascade)              */
       :root {
-        --bg: #0e0e10;
-        --panel: #16161a;
-        --panel-2: #1f1f24;
-        --border: #2a2a30;
-        --text: #f4f4f6;
-        --text-2: #b0b0b8;
-        --text-3: #6f6f78;
-        --accent: #d4af37;
-        --accent-2: #e9c66a;
-        --ok: #4ade80;
+        --bg:          #0a0a0c;
+        --bg-elev:     rgba(20,20,24,0.66);
+        --border:      rgba(255,255,255,0.08);
+        --border-hi:   rgba(212,175,55,0.32);
+        --text:        #f4f4f6;
+        --text-2:      #a8a8b0;
+        --text-3:      #6f6f78;
+        --gold:        #c9a449;
+        --gold-2:      #e9c66a;
+        --shadow-deep: 0 30px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.4);
+        --serif: "Cormorant Garamond", "Hoefler Text", Georgia, serif;
+        --sans:  "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; }
+      html, body { height: 100%; overflow: hidden; }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
-        background: var(--bg);
-        color: var(--text);
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 400;
         line-height: 1.5;
+        color: var(--text);
+        background: var(--bg);
         -webkit-font-smoothing: antialiased;
-        overflow-x: hidden;
-      }
-      a { color: var(--accent-2); text-decoration: none; }
-      a:hover { text-decoration: underline; }
-
-      header {
-        padding: 18px 28px;
-        border-bottom: 1px solid var(--border);
-        display: flex; align-items: center; justify-content: space-between;
-        flex-wrap: wrap; gap: 12px;
-        background: rgba(14,14,16,0.85);
-        backdrop-filter: blur(12px);
-        position: sticky; top: 0; z-index: 100;
-      }
-      header h1 {
-        font-size: 17px; font-weight: 600; letter-spacing: -0.2px;
-      }
-      header .sub { font-size: 13px; color: var(--text-3); margin-left: 12px; }
-      header .badges { display: flex; gap: 6px; flex-wrap: wrap; }
-      .badge {
-        font-size: 10px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
-        padding: 4px 9px; border-radius: 999px;
-        background: var(--panel-2); color: var(--text-2);
-        border: 1px solid var(--border);
-      }
-      .badge.ok { color: var(--ok); border-color: rgba(74,222,128,0.3); }
-      .badge.gold { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
-
-      .layout {
-        display: grid;
-        grid-template-columns: 340px 1fr;
-        height: calc(100vh - 60px);
-        overflow: hidden;
-      }
-      @media (max-width: 880px) {
-        .layout { grid-template-columns: 1fr; height: auto; }
+        -moz-osx-font-smoothing: grayscale;
+        letter-spacing: -0.01em;
       }
 
-      aside.controls {
-        padding: 22px 22px 28px;
-        border-right: 1px solid var(--border);
-        overflow-y: auto;
-        background: var(--panel);
+      /*  ╭─ HERO STAGE ─────────────────────────────────────────╮ */
+      #stage {
+        position: fixed; inset: 0;
+        background:
+          radial-gradient(ellipse at 50% 35%, #18181c 0%, #0a0a0c 60%, #050507 100%);
       }
-      .group { margin-bottom: 22px; }
-      .group-title {
-        font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+      #canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+      #canvas:active { cursor: grabbing; }
+
+      /*  ╭─ BRAND MARK · Editorial-Serif (top-left) ─────────────╮ */
+      .brand {
+        position: fixed; top: 26px; left: 42px; z-index: 10;
+        font-family: var(--serif);
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        color: var(--text);
+        text-transform: uppercase;
+        line-height: 1;
+        user-select: none;
+      }
+      .brand .dot {
+        display: inline-block; width: 5px; height: 5px;
+        background: var(--gold); border-radius: 50%;
+        margin: 0 8px 4px; vertical-align: middle;
+      }
+      .brand-sub {
+        position: fixed; top: 60px; left: 42px; z-index: 10;
+        font-size: 11px;
+        font-weight: 400;
+        letter-spacing: 0.32em;
         color: var(--text-3);
-        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
+
+      /*  ╭─ STATUS-PILLE · top-right ───────────────────────────╮ */
+      .status-pill {
+        position: fixed; top: 32px; right: 42px; z-index: 10;
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 14px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(20px);
+        border-radius: 999px;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        color: var(--text-2);
+      }
+      .status-pill .pulse {
+        width: 7px; height: 7px;
+        background: #4ade80; border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(74,222,128,0.6);
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
+        50%      { box-shadow: 0 0 0 8px rgba(74,222,128,0); }
+      }
+
+      /*  ╭─ CONFIG SUMMARY · bottom-center ─────────────────────╮ */
+      .summary {
+        position: fixed; left: 50%; bottom: 42px;
+        transform: translateX(-50%); z-index: 10;
+        display: flex; align-items: center; gap: 24px;
+        padding: 16px 28px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(28px) saturate(1.2);
+        border-radius: 14px;
+        box-shadow: var(--shadow-deep);
+        max-width: 88vw;
+        white-space: nowrap;
+      }
+      .summary .info {
+        display: flex; flex-direction: column; gap: 2px;
+        line-height: 1.35;
+      }
+      .summary .label-small {
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        color: var(--text-3);
+        text-transform: uppercase;
+      }
+      .summary .value-big {
+        font-family: var(--serif);
+        font-size: 17px;
+        font-weight: 500;
+        color: var(--text);
+        letter-spacing: 0.01em;
+      }
+      .summary .divider {
+        width: 1px; height: 32px; background: var(--border);
+      }
+      .summary .open-config {
+        margin-left: 10px;
+        background: var(--gold);
+        color: #1a1a1a;
+        border: none; border-radius: 999px;
+        padding: 9px 18px;
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: background 0.18s, transform 0.18s;
+      }
+      .summary .open-config:hover { background: var(--gold-2); transform: translateY(-1px); }
+
+      /*  ╭─ DRAWER · slide from right, premium dark ───────────╮ */
+      .drawer-overlay {
+        position: fixed; inset: 0; z-index: 100;
+        background: rgba(0,0,0,0.4);
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.28s ease;
+      }
+      .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+      .drawer {
+        position: fixed; top: 0; right: 0; bottom: 0; z-index: 101;
+        width: min(420px, 92vw);
+        background: rgba(14,14,16,0.97);
+        backdrop-filter: blur(40px) saturate(1.3);
+        border-left: 1px solid var(--border);
+        box-shadow: -40px 0 80px rgba(0,0,0,0.6);
+        transform: translateX(100%);
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+        display: flex; flex-direction: column;
+        overflow-y: auto;
+      }
+      .drawer.open { transform: translateX(0); }
+      .drawer-header {
+        position: sticky; top: 0; z-index: 1;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 26px 32px 16px;
+        background: linear-gradient(180deg, rgba(14,14,16,1) 70%, rgba(14,14,16,0));
+      }
+      .drawer-header h2 {
+        font-family: var(--serif);
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+      .drawer-header .close {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-2);
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        font-size: 18px; line-height: 1;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .drawer-header .close:hover { color: var(--text); border-color: var(--text-3); }
+      .drawer-body { padding: 0 32px 32px; }
+      .drawer .group { margin-bottom: 26px; }
+      .drawer .group-title {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        color: var(--text-3);
+        text-transform: uppercase;
+        margin-bottom: 12px;
         display: flex; justify-content: space-between; align-items: center;
       }
-      .group-title .value { color: var(--text-2); font-weight: 500; letter-spacing: 0; text-transform: none; }
-
-      .form-grid {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+      .drawer .group-title .value {
+        font-family: var(--serif);
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0;
+        color: var(--text);
+        text-transform: none;
       }
+
+      .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
       .form-btn {
-        background: var(--panel-2); color: var(--text-2);
-        border: 1px solid var(--border); border-radius: 8px;
-        padding: 10px 6px 8px;
-        font-size: 11px; font-weight: 500; line-height: 1.2; text-align: center;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        background: rgba(255,255,255,0.03);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 6px 10px;
+        font-size: 11px; font-weight: 500; line-height: 1.25;
+        text-align: center; cursor: pointer;
         font-family: inherit;
+        transition: all 0.16s;
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
       }
-      .form-btn:hover { background: #25252b; color: var(--text); }
+      .form-btn:hover {
+        background: rgba(255,255,255,0.06);
+        color: var(--text);
+        border-color: var(--text-3);
+      }
       .form-btn.active {
-        background: var(--accent);
-        color: #1a1a1a;
-        border-color: var(--accent);
+        background: var(--gold); color: #1a1a1a; border-color: var(--gold);
+        box-shadow: 0 6px 16px rgba(201,164,73,0.18);
       }
-      .form-btn svg { width: 28px; height: 28px; }
+      .form-btn svg { width: 30px; height: 30px; }
       .form-btn .code {
-        font-size: 9px; opacity: 0.7;
         font-family: "SF Mono", ui-monospace, monospace;
+        font-size: 9px; opacity: 0.65;
       }
 
-      .chip-row {
-        display: flex; flex-wrap: wrap; gap: 6px;
-      }
+      .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
       .chip {
-        background: var(--panel-2); color: var(--text-2);
-        border: 1px solid var(--border); border-radius: 999px;
-        padding: 6px 11px;
+        background: rgba(255,255,255,0.03);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 7px 12px;
         font-size: 11px; font-weight: 500;
         cursor: pointer;
         font-family: inherit;
-        transition: all 0.15s ease;
+        transition: all 0.16s;
       }
-      .chip:hover { color: var(--text); }
+      .chip:hover { color: var(--text); border-color: var(--text-3); }
       .chip.active {
         color: #1a1a1a; font-weight: 600;
-        border-width: 2px; padding: 5px 10px;
+        border-width: 2px; padding: 6px 11px;
       }
       .chip .swatch {
-        display: inline-block; width: 8px; height: 8px;
-        border-radius: 50%; margin-right: 5px;
+        display: inline-block; width: 9px; height: 9px;
+        border-radius: 50%; margin-right: 6px;
         vertical-align: middle;
         border: 1px solid rgba(255,255,255,0.15);
       }
 
-      .slider-wrap { padding: 0 2px; }
+      .slider-wrap { padding: 0 4px; }
       input[type="range"] {
-        width: 100%; appearance: none; background: transparent;
-        cursor: pointer;
+        width: 100%; appearance: none; background: transparent; cursor: pointer;
       }
       input[type="range"]::-webkit-slider-runnable-track {
-        height: 3px; background: var(--border); border-radius: 2px;
+        height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px;
       }
       input[type="range"]::-webkit-slider-thumb {
-        appearance: none; width: 14px; height: 14px;
-        background: var(--accent); border-radius: 50%;
-        margin-top: -5px;
+        appearance: none; width: 16px; height: 16px;
+        background: var(--gold); border-radius: 50%; margin-top: -6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
       }
 
-      button.btn {
+      .btn {
         width: 100%;
-        padding: 10px 14px;
-        background: var(--panel-2);
+        padding: 11px 16px;
+        background: rgba(255,255,255,0.04);
         color: var(--text);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 13px; font-weight: 500;
         font-family: inherit;
         cursor: pointer;
-        transition: all 0.15s ease;
-        display: flex; align-items: center; justify-content: center; gap: 6px;
+        transition: all 0.16s;
       }
-      button.btn:hover { background: #25252b; }
-      button.btn.primary {
-        background: var(--accent); color: #1a1a1a; border-color: var(--accent);
-        font-weight: 600;
-      }
-      button.btn.primary:hover { background: var(--accent-2); }
+      .btn:hover { background: rgba(255,255,255,0.08); border-color: var(--text-3); }
 
       .logo-preview {
-        margin-top: 8px;
-        height: 64px;
-        background-color: var(--panel-2);
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
+        margin-top: 10px;
+        height: 72px;
+        background-color: rgba(255,255,255,0.04);
+        background-size: contain; background-repeat: no-repeat; background-position: center;
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
       }
 
       .toggle-row {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 10px 12px;
-        background: var(--panel-2);
+        padding: 12px 14px;
+        background: rgba(255,255,255,0.03);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
       }
       .toggle-row .label-text { font-size: 13px; }
-      .toggle-row .label-text small { display: block; color: var(--text-3); font-size: 11px; }
+      .toggle-row .label-text strong { font-weight: 600; }
+      .toggle-row .label-text small { display: block; color: var(--text-3); font-size: 11px; margin-top: 2px; }
       .toggle-switch {
-        position: relative; width: 38px; height: 22px;
-        background: var(--border); border-radius: 999px;
-        cursor: pointer; transition: background 0.2s;
+        position: relative; width: 40px; height: 23px;
+        background: rgba(255,255,255,0.1); border-radius: 999px;
+        cursor: pointer; transition: background 0.22s;
         flex-shrink: 0;
       }
-      .toggle-switch.on { background: var(--accent); }
+      .toggle-switch.on { background: var(--gold); }
       .toggle-switch::after {
         content: ""; position: absolute; top: 2px; left: 2px;
-        width: 18px; height: 18px; background: #fff;
-        border-radius: 50%; transition: left 0.2s;
+        width: 19px; height: 19px; background: #fff;
+        border-radius: 50%; transition: left 0.22s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
       }
-      .toggle-switch.on::after { left: 18px; }
+      .toggle-switch.on::after { left: 19px; }
 
-      .canvas-wrap {
-        position: relative; height: 100%;
-        background: radial-gradient(circle at 50% 30%, #2a2a30 0%, #0a0a0c 70%);
-        overflow: hidden;
-      }
-      #canvas { width: 100%; height: 100%; display: block; }
-      .canvas-info {
-        position: absolute; bottom: 16px; left: 16px;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(8px);
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-family: "SF Mono", ui-monospace, monospace;
-        font-size: 11px;
-        color: var(--text-2);
-        border: 1px solid rgba(255,255,255,0.08);
-        max-width: calc(100% - 32px);
-      }
-      .canvas-info b { color: var(--text); font-weight: 600; }
-      .hint {
-        position: absolute; top: 16px; right: 16px;
-        background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(8px);
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        color: var(--text-3);
-        border: 1px solid rgba(255,255,255,0.08);
-      }
-      .footer-info {
-        position: absolute; bottom: 16px; right: 16px;
-        font-size: 10px; color: var(--text-3);
-        text-align: right;
-      }
-      .footer-info code { font-family: "SF Mono", monospace; color: var(--text-2); }
-
-      /* === Passwort-Gate === */
+      /* === Passwort-Gate · cinematic === */
       #authGate {
         position: fixed; inset: 0; z-index: 9999;
-        background: radial-gradient(circle at 50% 30%, #1a1a1c 0%, #050507 70%);
+        background:
+          radial-gradient(ellipse at 50% 35%, #1a1a1c 0%, #050507 70%);
         display: flex; align-items: center; justify-content: center;
-        font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
       }
       #authGate.hidden { display: none; }
       .auth-card {
-        background: rgba(22,22,26,0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(212,175,55,0.25);
-        border-radius: 14px;
-        padding: 36px 40px 32px;
-        width: min(420px, 90vw);
-        box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.05);
+        background: rgba(20,20,24,0.92);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(212,175,55,0.18);
+        border-radius: 16px;
+        padding: 42px 48px 36px;
+        width: min(440px, 90vw);
+        box-shadow: var(--shadow-deep);
       }
-      .auth-card h2 {
-        font-size: 18px; font-weight: 600; color: #f4f4f6;
-        letter-spacing: -0.2px; margin-bottom: 4px;
+      .auth-card .auth-brand {
+        font-family: var(--serif);
+        font-size: 22px; font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .auth-card .auth-brand .dot {
+        display: inline-block; width: 4px; height: 4px;
+        background: var(--gold); border-radius: 50%;
+        margin: 0 6px 4px; vertical-align: middle;
       }
       .auth-card p.sub {
-        font-size: 13px; color: #888; margin-bottom: 24px;
+        font-size: 12px; color: var(--text-3);
+        letter-spacing: 0.04em;
+        margin-bottom: 30px;
       }
       .auth-row { display: flex; gap: 8px; }
       .auth-card input[type="password"] {
         flex: 1;
-        background: #0e0e10; color: #f4f4f6;
-        border: 1px solid #2a2a30;
-        border-radius: 8px;
-        padding: 11px 14px;
+        background: #0a0a0c; color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 16px;
         font-size: 14px;
         font-family: inherit;
         outline: none;
-        transition: border-color 0.15s;
+        transition: border-color 0.16s;
       }
-      .auth-card input[type="password"]:focus {
-        border-color: #d4af37;
-      }
+      .auth-card input[type="password"]:focus { border-color: var(--gold); }
       .auth-card button {
-        background: #d4af37; color: #1a1a1a;
-        border: none; border-radius: 8px;
-        padding: 11px 20px;
+        background: var(--gold); color: #1a1a1a;
+        border: none; border-radius: 10px;
+        padding: 12px 24px;
+        font-family: var(--sans);
         font-size: 13px; font-weight: 600;
         cursor: pointer;
-        font-family: inherit;
-        transition: background 0.15s;
+        transition: background 0.16s;
       }
-      .auth-card button:hover { background: #e9c66a; }
+      .auth-card button:hover { background: var(--gold-2); }
       .auth-card .err {
-        margin-top: 10px;
-        font-size: 12px; color: #ff6b6b;
-        opacity: 0;
-        transition: opacity 0.2s;
+        margin-top: 12px; font-size: 12px; color: #ff6b6b;
+        opacity: 0; transition: opacity 0.22s;
       }
       .auth-card .err.show { opacity: 1; }
       .auth-card .badge-row {
-        margin-top: 24px; padding-top: 20px;
-        border-top: 1px solid #2a2a30;
-        font-size: 11px; color: #6f6f78;
-        line-height: 1.6;
+        margin-top: 26px; padding-top: 22px;
+        border-top: 1px solid var(--border);
+        font-size: 10px; color: var(--text-3);
+        letter-spacing: 0.06em; line-height: 1.7;
       }
-      .auth-card .badge-row b { color: #b0b0b8; font-weight: 600; }
+
+      /*  ╭─ Idle-fade · UI verschwindet sanft bei Inaktivität ─╮ */
+      .auto-fade {
+        opacity: 1;
+        transition: opacity 0.6s ease;
+      }
+      body.idle .auto-fade { opacity: 0.18; }
+
+      @media (max-width: 720px) {
+        .brand { font-size: 18px; left: 22px; top: 22px; letter-spacing: 0.12em; }
+        .brand-sub { left: 22px; top: 50px; font-size: 9px; }
+        .status-pill { right: 22px; top: 24px; }
+        .summary { left: 12px; right: 12px; transform: none; bottom: 22px;
+                   flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; }
+        .summary .divider { display: none; }
+      }
     </style>
     <script type="importmap">
       {
@@ -307,13 +422,14 @@
         }
       }
     </script>
-    <script type="module" crossorigin src="./assets/index--tkzN6iX.js"></script>
+    <script type="module" crossorigin src="./assets/index-DHnFiDd6.js"></script>
   </head>
   <body>
+    <!-- Passwort-Gate -->
     <div id="authGate">
       <div class="auth-card">
-        <h2>Ballerstaedt Veredelungs-Mockup</h2>
-        <p class="sub">Geschützter Zugang · interne Vorschau</p>
+        <div class="auth-brand">Ballerstaedt<span class="dot"></span></div>
+        <p class="sub">Siegelverschluss-Konfigurator · Beta-Zugang</p>
         <form id="authForm" autocomplete="off">
           <div class="auth-row">
             <input type="password" id="authPwd" placeholder="Passwort" autofocus />
@@ -322,69 +438,70 @@
           <div class="err" id="authErr">Falsches Passwort</div>
         </form>
         <div class="badge-row">
-          <b>Veredelungs-Vorschau · Beta</b><br/>
-          8 Formen · 9 Strukturprägungen · Logo-Upload · Live-3D
+          Veredelungs-Vorschau · 8 Formen · 9 Strukturprägungen · Logo-Upload · Live-3D
         </div>
       </div>
     </div>
     <script>
       (function () {
         const KEY = "baco-veredelung-auth-2026";
-        const PWD = "Baco";  // ← Soft-Gate, kein echter Schutz
+        const PWD = "Baco";
         const gate = document.getElementById("authGate");
-        const err = document.getElementById("authErr");
-        const form = document.getElementById("authForm");
-        const pwd = document.getElementById("authPwd");
-
-        // Persistenter Login via sessionStorage (überlebt Tab-Reload, nicht Tab-Schließen)
-        if (sessionStorage.getItem(KEY) === "ok") {
-          gate.classList.add("hidden");
-        }
-
-        form.addEventListener("submit", function (e) {
+        if (sessionStorage.getItem(KEY) === "ok") gate.classList.add("hidden");
+        document.getElementById("authForm").addEventListener("submit", function (e) {
           e.preventDefault();
-          if (pwd.value === PWD) {
-            sessionStorage.setItem(KEY, "ok");
-            gate.classList.add("hidden");
-            err.classList.remove("show");
-          } else {
-            err.classList.add("show");
-            pwd.value = "";
-            pwd.focus();
-          }
+          const v = document.getElementById("authPwd").value;
+          const err = document.getElementById("authErr");
+          if (v === PWD) { sessionStorage.setItem(KEY, "ok"); gate.classList.add("hidden"); err.classList.remove("show"); }
+          else { err.classList.add("show"); document.getElementById("authPwd").value = ""; document.getElementById("authPwd").focus(); }
         });
       })();
     </script>
-    <header>
-      <div style="display: flex; align-items: baseline;">
-        <h1>Ballerstaedt Siegelverschluss-Konfigurator</h1>
-        <span class="sub">Veredelungs-Vorschau · Beta</span>
-      </div>
-      <div class="badges">
-        <span class="badge ok">Live</span>
-        <span class="badge gold">Aluminium · Lacke · Prägungen</span>
-      </div>
-    </header>
 
-    <div class="layout">
-      <aside class="controls">
+    <!-- Cinematic Stage -->
+    <div id="stage">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <!-- Brand-Mark, Editorial-Serif -->
+    <div class="brand auto-fade">Ballerstaedt<span class="dot"></span></div>
+    <div class="brand-sub auto-fade">Siegelverschluss-Konfigurator · Beta</div>
+
+    <!-- Status-Pille -->
+    <div class="status-pill auto-fade">
+      <div class="pulse"></div>
+      <span>Live</span>
+    </div>
+
+    <!-- Configuration-Summary, bottom-center -->
+    <div class="summary auto-fade">
+      <div class="info">
+        <span class="label-small">Aktuelle Konfiguration</span>
+        <span class="value-big" id="canvasInfo">Ronde · Ø95mm · Aluminium</span>
+      </div>
+      <div class="divider"></div>
+      <button class="open-config" id="openConfig">Konfigurieren</button>
+    </div>
+
+    <!-- Drawer (slide from right) -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <aside class="drawer controls" id="drawer">
+      <div class="drawer-header">
+        <h2>Konfiguration</h2>
+        <button class="close" id="closeDrawer" aria-label="Schließen">×</button>
+      </div>
+      <div class="drawer-body">
         <div class="group">
           <div class="group-title">
             <span>Form</span>
             <span class="value" id="shapeLabel">Ronde (R)</span>
           </div>
-          <div class="form-grid" id="shapePicker">
-            <!-- gefüllt via JS -->
-          </div>
+          <div class="form-grid" id="shapePicker"></div>
         </div>
 
         <div class="group">
-          <div class="group-title">
-            <span>Material</span>
-          </div>
-          <div class="chip-row" id="materialPicker">
-            <!-- gefüllt via JS -->
-          </div>
+          <div class="group-title"><span>Material</span></div>
+          <div class="chip-row" id="materialPicker"></div>
         </div>
 
         <div class="group">
@@ -398,19 +515,15 @@
         </div>
 
         <div class="group">
-          <div class="group-title">
-            <span>Logo / Druckbild</span>
-          </div>
+          <div class="group-title"><span>Logo / Druckbild</span></div>
           <button class="btn" id="logoBtn">Logo wählen (PNG/JPG/SVG)</button>
-          <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml" style="display: none" />
-          <div class="logo-preview" id="logoPreview" style="display: none"></div>
-          <div id="sampleLogosRow" style="display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap;"></div>
+          <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none" />
+          <div class="logo-preview" id="logoPreview" style="display:none"></div>
+          <div id="sampleLogosRow" style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;"></div>
         </div>
 
         <div class="group">
-          <div class="group-title">
-            <span>Druck oder Prägung</span>
-          </div>
+          <div class="group-title"><span>Druck oder Prägung</span></div>
           <div class="toggle-row" id="embossToggle">
             <div class="label-text">
               <strong>Blindprägung</strong>
@@ -420,7 +533,7 @@
           </div>
         </div>
 
-        <div class="group" id="embossStrengthGroup" style="display: none">
+        <div class="group" id="embossStrengthGroup" style="display:none">
           <div class="group-title">
             <span>Präge-Tiefe</span>
             <span class="value" id="embossStrengthValue">4.0</span>
@@ -433,17 +546,32 @@
         <div class="group">
           <button class="btn" id="resetBtn">Zurücksetzen</button>
         </div>
-      </aside>
-
-      <div class="canvas-wrap">
-        <canvas id="canvas"></canvas>
-        <div class="hint">Drag = drehen · Scroll = zoom</div>
-        <div class="canvas-info" id="canvasInfo">Ronde · Ø95mm · Aluminium glänzend</div>
-        <div class="footer-info">
-          © Ballerstaedt &amp; Co. OHG
-        </div>
       </div>
-    </div>
+    </aside>
 
+
+    <script>
+      // === Drawer · Open/Close
+      const drawer = document.getElementById("drawer");
+      const overlay = document.getElementById("drawerOverlay");
+      const open = document.getElementById("openConfig");
+      const close = document.getElementById("closeDrawer");
+      open.addEventListener("click", () => { drawer.classList.add("open"); overlay.classList.add("open"); });
+      [overlay, close].forEach(el => el.addEventListener("click", () => {
+        drawer.classList.remove("open"); overlay.classList.remove("open");
+      }));
+
+      // === Idle-Fade · UI wird transparent nach 4s Inaktivität
+      let idleTimer;
+      function resetIdle() {
+        document.body.classList.remove("idle");
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => document.body.classList.add("idle"), 4000);
+      }
+      ["mousemove","keydown","touchstart","wheel"].forEach(ev =>
+        window.addEventListener(ev, resetIdle, { passive: true })
+      );
+      resetIdle();
+    </script>
   </body>
 </html>

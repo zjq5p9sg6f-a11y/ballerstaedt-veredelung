@@ -4131,8 +4131,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1;
 const scene = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Scene();
-const camera = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PerspectiveCamera(34, 1, 0.01, 100);
-camera.position.set(0, 0.55, 2.6);
+const camera = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PerspectiveCamera(28, 1, 0.01, 100);
+camera.position.set(0, 0.42, 2.15);
 const pmrem = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.PMREMGenerator(renderer);
 new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.TextureLoader().load(
   "https://oc-k3.s3.eu-central-1.amazonaws.com/libs/3d/environments/apartment.hdr",
@@ -4144,32 +4144,53 @@ new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.TextureLoader().
   }
 );
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.add(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.AmbientLight(16777215, 0.25));
-const keyLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16777215, 1.6);
-keyLight.position.set(2.5, 4, 3);
+scene.add(new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.AmbientLight(16777215, 0.18));
+const keyLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16773590, 1.8);
+keyLight.position.set(2.8, 4.2, 2.6);
 scene.add(keyLight);
-const fillLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16770229, 0.4);
-fillLight.position.set(-3, 1, -2);
+const fillLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(12113151, 0.35);
+fillLight.position.set(-2.6, 0.4, -1.2);
 scene.add(fillLight);
-const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(2.4, 64);
+const rimLight = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.DirectionalLight(16766106, 0.9);
+rimLight.position.set(0, 1.5, -3);
+scene.add(rimLight);
+const heroSpot = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.SpotLight(16774358, 1.4, 6, Math.PI / 5, 0.4, 1.6);
+heroSpot.position.set(0, 3.5, 0.5);
+heroSpot.target.position.set(0, 0, 0);
+scene.add(heroSpot);
+scene.add(heroSpot.target);
+const floorGeo = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.CircleGeometry(3.5, 96);
 const floorMat = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.MeshStandardMaterial({
-  color: 1710620,
-  metalness: 0.6,
-  roughness: 0.4
+  color: 1184282,
+  metalness: 0.85,
+  roughness: 0.35
 });
 const floor = new ballerstaedt_mf_2_veredelung__loadShare__three__loadShare__.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
-floor.position.y = -0.05;
+floor.position.y = -0.06;
 scene.add(floor);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.06;
-controls.minPolarAngle = 0.15;
+controls.dampingFactor = 0.07;
+controls.minPolarAngle = 0.18;
 controls.maxPolarAngle = Math.PI / 2.05;
 controls.enablePan = false;
-controls.minDistance = 1.5;
-controls.maxDistance = 5;
-controls.target.set(0, 0.05, 0);
+controls.minDistance = 1.3;
+controls.maxDistance = 4;
+controls.target.set(0, 0.02, 0);
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+let autoRotateResumeTimer = null;
+controls.addEventListener("start", () => {
+  controls.autoRotate = false;
+  if (autoRotateResumeTimer) clearTimeout(autoRotateResumeTimer);
+});
+controls.addEventListener("end", () => {
+  if (autoRotateResumeTimer) clearTimeout(autoRotateResumeTimer);
+  autoRotateResumeTimer = setTimeout(() => {
+    controls.autoRotate = true;
+  }, 4500);
+});
 const MM = 0.01;
 function laschePath(shape, edgeR, side = "right") {
   const w = 14 * MM, h = 18 * MM;
@@ -4767,9 +4788,9 @@ const bloomPass = new UnrealBloomPass(
 composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 function resize() {
-  const wrap = document.querySelector(".canvas-wrap");
-  const w = wrap.clientWidth;
-  const h = wrap.clientHeight;
+  const stage = document.getElementById("stage") || document.body;
+  const w = stage.clientWidth || window.innerWidth;
+  const h = stage.clientHeight || window.innerHeight;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
