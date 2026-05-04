@@ -6067,7 +6067,7 @@ function animate() {
       <span>Strukturprägung</span>
       <span class="value" id="praegungLabel">Glatt</span>
     </div>
-    <div class="form-grid" id="praegungRow"></div>
+    <div class="chip-row" id="praegungRow"></div>
   `;
   if (logoGroup && logoGroup.parentElement === aside) {
     aside.insertBefore(praegungSection, logoGroup);
@@ -6077,13 +6077,23 @@ function animate() {
   const praegungRowEl = document.getElementById("praegungRow");
   PRAEGUNGEN.forEach((p) => {
     const btn = document.createElement("button");
-    btn.className = "form-btn" + (p.id === state.praegung ? " active" : "");
+    btn.className = "chip" + (p.id === state.praegung ? " active" : "");
     btn.dataset.id = p.id;
-    btn.innerHTML = `<div>${p.label}</div><div class="code">${p.ui}</div>`;
+    btn.textContent = p.label;
+    if (p.id === state.praegung) {
+      btn.style.background = "var(--magenta)";
+      btn.style.borderColor = "var(--magenta)";
+      btn.style.color = "#fff";
+    }
     btn.onclick = () => {
       state.praegung = p.id;
-      document.querySelectorAll("#praegungRow .form-btn").forEach((b) => {
-        b.classList.toggle("active", b.dataset.id === p.id);
+      document.querySelectorAll("#praegungRow .chip").forEach((b) => {
+        const el = b;
+        const active = el.dataset.id === p.id;
+        el.classList.toggle("active", active);
+        el.style.background = active ? "var(--magenta)" : "";
+        el.style.borderColor = active ? "var(--magenta)" : "";
+        el.style.color = active ? "#fff" : "";
       });
       const lbl = document.getElementById("praegungLabel");
       if (lbl) lbl.textContent = p.label;
