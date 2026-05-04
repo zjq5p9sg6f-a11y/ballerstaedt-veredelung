@@ -10,23 +10,28 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       /*  Design-System · golden-ratio φ=1.618, Bauhaus-Apple-Disziplin
           Spacing-Skala:  4 · 6 · 10 · 16 · 26 · 42 · 68 · 110 (φ-Multiplikatoren)
           Type-Scale:    11 · 13 · 17 · 27 · 44 · 71 (φ-cascade)              */
       :root {
-        --bg:          #0a0a0c;
-        --bg-elev:     rgba(20,20,24,0.66);
+        /* BaCo Corporate Identity */
+        --magenta:     #E6007E;
+        --magenta-2:   #FF3FA0;
+        --magenta-dim: #B8005F;
+        --baco-dark:   #1A2332;
+        --bg:          #0a0a0e;
+        --bg-elev:     rgba(20,22,28,0.70);
+        --bg-deeper:   #050507;
         --border:      rgba(255,255,255,0.08);
-        --border-hi:   rgba(212,175,55,0.32);
+        --border-hi:   rgba(230,0,126,0.40);
         --text:        #f4f4f6;
         --text-2:      #a8a8b0;
         --text-3:      #6f6f78;
-        --gold:        #c9a449;
-        --gold-2:      #e9c66a;
         --shadow-deep: 0 30px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.4);
-        --serif: "Cormorant Garamond", "Hoefler Text", Georgia, serif;
+        --shadow-magenta: 0 12px 32px rgba(230,0,126,0.18);
+        --brand: "IBM Plex Sans", "Inter", sans-serif;
         --sans:  "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,37 +48,54 @@
         letter-spacing: -0.01em;
       }
 
-      /*  ╭─ HERO STAGE ─────────────────────────────────────────╮ */
+      /*  ╭─ HERO STAGE · subtle BaCo-Magenta-Hauch im Background-Glow ─╮ */
       #stage {
         position: fixed; inset: 0;
         background:
-          radial-gradient(ellipse at 50% 35%, #18181c 0%, #0a0a0c 60%, #050507 100%);
+          radial-gradient(ellipse at 50% 38%, #1a1820 0%, #0d0d12 50%, #050507 100%),
+          radial-gradient(ellipse at 18% 0%, rgba(230,0,126,0.08) 0%, transparent 60%);
+        background-blend-mode: screen;
       }
       #canvas { width: 100%; height: 100%; display: block; cursor: grab; }
       #canvas:active { cursor: grabbing; }
 
-      /*  ╭─ BRAND MARK · Editorial-Serif (top-left) ─────────────╮ */
+      /*  ╭─ BRAND MARK · BaCo CI-Logo in IBM Plex Sans ─────────────╮ */
       .brand {
-        position: fixed; top: 26px; left: 42px; z-index: 10;
-        font-family: var(--serif);
-        font-size: 26px;
-        font-weight: 500;
-        letter-spacing: 0.18em;
-        color: var(--text);
-        text-transform: uppercase;
+        position: fixed; top: 30px; left: 42px; z-index: 10;
+        font-family: var(--brand);
         line-height: 1;
         user-select: none;
       }
-      .brand .dot {
-        display: inline-block; width: 5px; height: 5px;
-        background: var(--gold); border-radius: 50%;
-        margin: 0 8px 4px; vertical-align: middle;
+      .brand .top {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--magenta);
+        display: inline-block;
+      }
+      .brand .top::after {
+        /* der Bernstein-Akzentpunkt im "O" des Originals */
+        content: "";
+        display: inline-block;
+        width: 6px; height: 6px;
+        background: linear-gradient(135deg, #f8c869, #d97706);
+        border-radius: 50%;
+        margin-left: 4px; vertical-align: super;
+        box-shadow: 0 0 8px rgba(230,164,42,0.6);
+      }
+      .brand .sub {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.32em;
+        color: var(--text-2);
+        text-transform: uppercase;
+        margin-top: 5px;
       }
       .brand-sub {
-        position: fixed; top: 60px; left: 42px; z-index: 10;
-        font-size: 11px;
+        position: fixed; top: 78px; left: 42px; z-index: 10;
+        font-size: 10px;
         font-weight: 400;
-        letter-spacing: 0.32em;
+        letter-spacing: 0.28em;
         color: var(--text-3);
         text-transform: uppercase;
       }
@@ -139,18 +161,23 @@
       }
       .summary .open-config {
         margin-left: 10px;
-        background: var(--gold);
-        color: #1a1a1a;
+        background: var(--magenta);
+        color: #fff;
         border: none; border-radius: 999px;
-        padding: 9px 18px;
+        padding: 10px 22px;
         font-family: var(--sans);
         font-size: 12px;
         font-weight: 600;
         letter-spacing: 0.02em;
         cursor: pointer;
-        transition: background 0.18s, transform 0.18s;
+        transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+        box-shadow: var(--shadow-magenta);
       }
-      .summary .open-config:hover { background: var(--gold-2); transform: translateY(-1px); }
+      .summary .open-config:hover {
+        background: var(--magenta-2);
+        transform: translateY(-1px);
+        box-shadow: 0 16px 36px rgba(230,0,126,0.32);
+      }
 
       /*  ╭─ DRAWER · slide from right, premium dark ───────────╮ */
       .drawer-overlay {
@@ -235,8 +262,8 @@
         border-color: var(--text-3);
       }
       .form-btn.active {
-        background: var(--gold); color: #1a1a1a; border-color: var(--gold);
-        box-shadow: 0 6px 16px rgba(201,164,73,0.18);
+        background: var(--magenta); color: #fff; border-color: var(--magenta);
+        box-shadow: 0 6px 16px rgba(230,0,126,0.28);
       }
       .form-btn svg { width: 30px; height: 30px; }
       .form-btn .code {
@@ -258,7 +285,7 @@
       }
       .chip:hover { color: var(--text); border-color: var(--text-3); }
       .chip.active {
-        color: #1a1a1a; font-weight: 600;
+        color: #fff; font-weight: 600;
         border-width: 2px; padding: 6px 11px;
       }
       .chip .swatch {
@@ -277,7 +304,7 @@
       }
       input[type="range"]::-webkit-slider-thumb {
         appearance: none; width: 16px; height: 16px;
-        background: var(--gold); border-radius: 50%; margin-top: -6px;
+        background: var(--magenta); border-radius: 50%; margin-top: -6px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.4);
       }
 
@@ -320,7 +347,7 @@
         cursor: pointer; transition: background 0.22s;
         flex-shrink: 0;
       }
-      .toggle-switch.on { background: var(--gold); }
+      .toggle-switch.on { background: var(--magenta); }
       .toggle-switch::after {
         content: ""; position: absolute; top: 2px; left: 2px;
         width: 19px; height: 19px; background: #fff;
@@ -346,17 +373,27 @@
         width: min(440px, 90vw);
         box-shadow: var(--shadow-deep);
       }
-      .auth-card .auth-brand {
-        font-family: var(--serif);
-        font-size: 22px; font-weight: 500;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-bottom: 4px;
+      .auth-card .auth-brand { margin-bottom: 8px; }
+      .auth-card .auth-brand .top {
+        font-family: var(--brand);
+        font-size: 22px; font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--magenta);
+        line-height: 1;
       }
-      .auth-card .auth-brand .dot {
-        display: inline-block; width: 4px; height: 4px;
-        background: var(--gold); border-radius: 50%;
-        margin: 0 6px 4px; vertical-align: middle;
+      .auth-card .auth-brand .top::after {
+        content: ""; display: inline-block;
+        width: 6px; height: 6px;
+        background: linear-gradient(135deg, #f8c869, #d97706);
+        border-radius: 50%; margin-left: 4px; vertical-align: super;
+        box-shadow: 0 0 8px rgba(230,164,42,0.6);
+      }
+      .auth-card .auth-brand .sub-line {
+        font-family: var(--brand);
+        font-size: 11px; font-weight: 500;
+        letter-spacing: 0.32em;
+        color: var(--text);
+        margin-top: 5px;
       }
       .auth-card p.sub {
         font-size: 12px; color: var(--text-3);
@@ -375,9 +412,9 @@
         outline: none;
         transition: border-color 0.16s;
       }
-      .auth-card input[type="password"]:focus { border-color: var(--gold); }
+      .auth-card input[type="password"]:focus { border-color: var(--magenta); }
       .auth-card button {
-        background: var(--gold); color: #1a1a1a;
+        background: var(--magenta); color: #1a1a1a;
         border: none; border-radius: 10px;
         padding: 12px 24px;
         font-family: var(--sans);
@@ -385,7 +422,7 @@
         cursor: pointer;
         transition: background 0.16s;
       }
-      .auth-card button:hover { background: var(--gold-2); }
+      .auth-card button:hover { background: var(--magenta-2); }
       .auth-card .err {
         margin-top: 12px; font-size: 12px; color: #ff6b6b;
         opacity: 0; transition: opacity 0.22s;
@@ -428,8 +465,11 @@
     <!-- Passwort-Gate -->
     <div id="authGate">
       <div class="auth-card">
-        <div class="auth-brand">Ballerstaedt<span class="dot"></span></div>
-        <p class="sub">Siegelverschluss-Konfigurator · Beta-Zugang</p>
+        <div class="auth-brand">
+          <div class="top">BALLERSTAEDT</div>
+          <div class="sub-line">SIEGELSYSTEME</div>
+        </div>
+        <p class="sub">Veredelungs-Konfigurator · Beta-Zugang</p>
         <form id="authForm" autocomplete="off">
           <div class="auth-row">
             <input type="password" id="authPwd" placeholder="Passwort" autofocus />
@@ -464,8 +504,11 @@
     </div>
 
     <!-- Brand-Mark, Editorial-Serif -->
-    <div class="brand auto-fade">Ballerstaedt<span class="dot"></span></div>
-    <div class="brand-sub auto-fade">Siegelverschluss-Konfigurator · Beta</div>
+    <div class="brand auto-fade">
+      <div class="top">BALLERSTAEDT</div>
+      <div class="sub">SIEGELSYSTEME</div>
+    </div>
+    <div class="brand-sub auto-fade">Veredelungs-Konfigurator · Beta</div>
 
     <!-- Status-Pille -->
     <div class="status-pill auto-fade">
