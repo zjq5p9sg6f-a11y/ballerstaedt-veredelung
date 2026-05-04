@@ -2,9 +2,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 // ============================================================
@@ -295,13 +298,13 @@ const MATERIALS = [
 // ============================================================
 //  STATE
 // ============================================================
-const state = {
+const state: any = {
   shape: "ronde",
   diameter: 95,
   material: "alu_g",
   praegung: "glatt",
-  logoDataUrl: null,
-  embossingMode: false,
+  printLogoDataUrl: null,   // Logo als Druckbild (Diffuse-Map)
+  embossLogoDataUrl: null,  // Logo als Blindprägung (Normal-Map via Sobel)
   embossStrength: 4,
 };
 
@@ -319,50 +322,252 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 100);
-camera.position.set(0, 0.55, 2.6);
+const camera = new THREE.PerspectiveCamera(28, 1, 0.01, 100);
+// Hero-Camera · näher dran, leicht über Augenhöhe, dramatisch
+camera.position.set(0.0, 0.42, 2.15);
 
+// ============================================================
+//  STUDIO-HDR · Polyhaven · Hauptbeleuchtung kommt aus HDR
+// ============================================================
 const pmrem = new THREE.PMREMGenerator(renderer);
-// Premium HDR-Environment (von ObjectCode public S3, gleiches wie K3 selbst nutzt)
-new THREE.TextureLoader().load(
-  "https://oc-k3.s3.eu-central-1.amazonaws.com/libs/3d/environments/apartment.hdr",
-  () => {},
-  undefined,
-  () => {
-    // Fallback auf prozedurales RoomEnvironment falls HDR nicht ladbar
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  }
-);
-// Sofort-Fallback während HDR lädt
+pmrem.compileEquirectangularShader();
+
+// Sofort-Fallback während HDR lädt (prozedural)
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.25));
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
-keyLight.position.set(2.5, 4, 3);
-scene.add(keyLight);
-const fillLight = new THREE.DirectionalLight(0xffe4b5, 0.4);
-fillLight.position.set(-3, 1, -2);
-scene.add(fillLight);
+new RGBELoader()
+  .setPath("./textures/")
+  .load(
+    "studio.hdr",
+    (texture: any) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      const envMap = pmrem.fromEquirectangular(texture).texture;
+      scene.environment = envMap;
+      texture.dispose();
+      // eslint-disable-next-line no-console
+      console.log("[HDR] Studio-Environment geladen");
+    },
+    undefined,
+    (err: any) => {
+      // eslint-disable-next-line no-console
+      console.warn("[HDR] Fallback auf RoomEnvironment", err);
+    }
+  );
 
-// Reflection floor
-const floorGeo = new THREE.CircleGeometry(2.4, 64);
-const floorMat = new THREE.MeshStandardMaterial({
-  color: 0x1a1a1c, metalness: 0.6, roughness: 0.4,
-});
-const floor = new THREE.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -0.05;
-scene.add(floor);
+// === Beautydish-Setup · Photographer-Light für Strukturen ===
+// Charakter: halbweich, definierte Highlights, hohe Detailwiedergabe in Mikrostrukturen
+// (im Gegensatz zu Softbox, die Strukturen glättet)
+//
+// Beautydish-Sim: SpotLight mit engem Kegel + mittlerer Penumbra + hoher Decay
+// Position: leicht von oben-vorn, 30° Kameraachse-Versatz (Standard-Studio-Setup)
+
+const beautydish = new THREE.SpotLight(
+  0xfff8ee,          // sehr leicht warm (5500K-Tageslicht-Look)
+  1.4,               // intensity · realistisch, nicht überstrahlend
+  5,                 // distance
+  Math.PI / 7.5,     // cone angle ~24°
+  0.55,              // penumbra
+  1.6                // decay
+);
+beautydish.position.set(0.4, 2.6, 1.2);
+beautydish.target.position.set(0, 0, 0);
+beautydish.castShadow = true;
+beautydish.shadow.mapSize.set(2048, 2048);
+beautydish.shadow.bias = -0.0002;
+beautydish.shadow.radius = 4;
+beautydish.shadow.camera.near = 0.1;
+beautydish.shadow.camera.far = 8;
+scene.add(beautydish);
+scene.add(beautydish.target);
+
+// Subtle Fill-Reflektor · gegenüber positioniert, dunkler — verhindert too-stark Schatten
+const fillReflector = new THREE.DirectionalLight(0xfff8ee, 0.25);
+fillReflector.position.set(-1.8, 0.6, 0.8);
+scene.add(fillReflector);
+
+// Renderer · Shadow-Setup
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
+renderer.toneMappingExposure = 0.78;  // realistic camera-look · keine Überbelichtung
+
+// ============================================================
+//  PURE BLACK BACKDROP · keine Effekte, kein Boden
+// ============================================================
+scene.background = new THREE.Color(0x000000);
+
+// (deaktiviert) Star-Field-Generator bleibt im Code für ggf. spätere Rückkehr
+function _disabled_buildStarField_unused() {
+  return null;
+}
+const stars: any = null;
+const galacticHaze: any = null;
+// Original-Star-Field-Implementierung deaktiviert · siehe Git-History falls Reaktivierung gewünscht
+function _ignore_legacy_starfield() {
+// Konzentration entlang Galactic-Plane (y ~ 0) · Power-Law-Distribution für Größen
+// Stars sind weiß / leicht bläulich (heiße Sterne) / leicht gelblich (kühle Sterne)
+function buildStarField() {
+  const N = 9000;
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+  const siz = new Float32Array(N);
+
+  for (let i = 0; i < N; i++) {
+    // 60% Sterne in Milky-Way-Band (dichter), 40% gleichverteilt am Himmel
+    const inBand = Math.random() < 0.6;
+    let theta = Math.random() * Math.PI * 2;
+    let phi: number;
+    if (inBand) {
+      // Konzentriert nahe equator (galactic plane) · Gauss um phi=π/2
+      const u = Math.random() + Math.random() + Math.random() - 1.5;  // approx normal
+      phi = Math.PI / 2 + u * 0.35;  // ±20° um equator
+    } else {
+      phi = Math.acos(2 * Math.random() - 1);
+    }
+    const r = 70 + Math.random() * 30;
+    pos[i*3]     = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3 + 1] = r * Math.cos(phi);
+    pos[i*3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+    // Star-Color: realistic stellar classes (Wien's law)
+    // 70% sun-like (white-yellow), 20% blue-white (heiß), 10% red-orange (kühl)
+    const t = Math.random();
+    if (t < 0.7) {
+      col[i*3]   = 1.0;
+      col[i*3+1] = 0.97 + Math.random() * 0.03;
+      col[i*3+2] = 0.92 + Math.random() * 0.06;
+    } else if (t < 0.9) {
+      col[i*3]   = 0.78 + Math.random() * 0.1;
+      col[i*3+1] = 0.85 + Math.random() * 0.1;
+      col[i*3+2] = 1.0;
+    } else {
+      col[i*3]   = 1.0;
+      col[i*3+1] = 0.7 + Math.random() * 0.15;
+      col[i*3+2] = 0.5 + Math.random() * 0.15;
+    }
+
+    // Power-law: viele kleine, wenige große (HR-Diagramm-realistisch)
+    siz[i] = 0.5 + Math.pow(Math.random(), 5) * 5.0;
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  g.setAttribute("color",    new THREE.BufferAttribute(col, 3));
+  g.setAttribute("size",     new THREE.BufferAttribute(siz, 1));
+
+  const m = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 }, uPxRatio: { value: renderer.getPixelRatio() } },
+    vertexShader: `
+      attribute float size;
+      attribute vec3 color;
+      varying vec3 vColor;
+      uniform float uTime;
+      uniform float uPxRatio;
+      void main() {
+        vColor = color;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        float twinkle = 0.88 + 0.12 * sin(uTime * 1.5 + size * 19.0);
+        // CLAMPED · keine Mega-Rectangles bei nahen Stars
+        float ps = size * twinkle * (180.0 / max(-mv.z, 1.0));
+        gl_PointSize = clamp(ps, 0.5, 12.0) * uPxRatio;
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float d = length(c);
+        if (d > 0.5) discard;
+        // Realistische Stern-Helligkeitskurve (Gauss)
+        float a = exp(-d * d * 18.0);
+        gl_FragColor = vec4(vColor * (0.4 + a * 1.4), a);
+      }
+    `,
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  return new THREE.Points(g, m);
+}
+const stars = buildStarField();
+scene.add(stars);
+
+// === Galactic-Dust-Band · subtle haze entlang Milky-Way-Plane ===
+// Sehr dezenter weißlich-grauer Glow als Andeutung des galactic core
+function buildGalacticHaze() {
+  const geo = new THREE.SphereGeometry(55, 64, 32);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec3 vWorldPos;
+      void main() {
+        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vWorldPos;
+      // simple noise
+      float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 54.227))) * 43758.5453); }
+      float noise(vec3 p) {
+        vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.0-2.0*f);
+        return mix(
+          mix(mix(hash(i), hash(i+vec3(1,0,0)), f.x), mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)), f.x), f.y),
+          mix(mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)), f.x), mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)), f.x), f.y),
+          f.z
+        );
+      }
+      float fbm(vec3 p) {
+        float s = 0.0; float a = 0.5;
+        for (int i = 0; i < 4; i++) { s += a * noise(p); p *= 2.0; a *= 0.5; }
+        return s;
+      }
+      void main() {
+        vec3 dir = normalize(vWorldPos);
+        // Konzentriert entlang galactic plane (y ~ 0)
+        float bandStrength = exp(-dir.y * dir.y * 25.0);
+        float n = fbm(dir * 6.0);
+        float density = bandStrength * smoothstep(0.35, 0.85, n);
+        // Realistische Milky-Way-Farben: warm-weiß mit leicht bläulichem Halo
+        vec3 col = mix(vec3(0.18, 0.20, 0.28), vec3(0.85, 0.78, 0.62), density * 0.5);
+        col *= density * 0.45;  // dezent, nicht überstrahlend
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `,
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
+  return new THREE.Mesh(geo, mat);
+}
+// noop · galacticHaze deaktiviert
+}  // close _ignore_legacy_starfield
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.06;
-controls.minPolarAngle = 0.15;
+controls.dampingFactor = 0.07;
+controls.minPolarAngle = 0.18;
 controls.maxPolarAngle = Math.PI / 2.05;
 controls.enablePan = false;
-controls.minDistance = 1.5;
-controls.maxDistance = 5;
-controls.target.set(0, 0.05, 0);
+controls.minDistance = 1.3;
+controls.maxDistance = 4;
+controls.target.set(0, 0.02, 0);
+// Auto-Rotate · langsam, hypnotisch — pausiert bei User-Input (auto-resume nach idle)
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+
+// User-Interaction pausiert Auto-Rotate · während Drag: UI fade-out (freie Sicht auf Folie)
+let autoRotateResumeTimer: any = null;
+controls.addEventListener("start", () => {
+  controls.autoRotate = false;
+  document.body.classList.add("dragging");
+  if (autoRotateResumeTimer) clearTimeout(autoRotateResumeTimer);
+});
+controls.addEventListener("end", () => {
+  document.body.classList.remove("dragging");
+  if (autoRotateResumeTimer) clearTimeout(autoRotateResumeTimer);
+  autoRotateResumeTimer = setTimeout(() => { controls.autoRotate = true; }, 4500);
+});
 
 // ============================================================
 //  GEOMETRY BUILDERS  (9 BaCo-Formen)
@@ -529,17 +734,15 @@ function makeMaterial(matConfig) {
     metalness: matConfig.metalness,
     roughness: matConfig.roughness,
     side: THREE.DoubleSide,
-    envMapIntensity: 1.6,
-    // Premium-Eigenschaften
-    clearcoat: isLack ? 0.6 : (isAlu ? 0.15 : 0.25),
-    clearcoatRoughness: isLack ? 0.08 : 0.25,
-    sheen: matConfig.id === "kunst" ? 0.3 : 0,
+    envMapIntensity: 0.85,                          // realistic, nicht überreflektiert
+    clearcoat: isLack ? 0.25 : (isAlu ? 0.05 : 0.1),  // deutlich weniger Klarschicht
+    clearcoatRoughness: isLack ? 0.18 : 0.35,
+    sheen: matConfig.id === "kunst" ? 0.2 : 0,
     sheenColor: new THREE.Color(0xffffff),
     sheenRoughness: 0.6,
-    anisotropy: isAlu ? 0.4 : 0,
+    anisotropy: isAlu ? 0.35 : 0,
     anisotropyRotation: Math.PI / 4,
-    iridescence: isLack ? 0.05 : 0,
-    iridescenceIOR: 1.3,
+    iridescence: 0,                                 // kein Regenbogen-Effekt
   });
 
   // Strukturprägung als Haupt-Normal-Map auf der Folien-Oberfläche
@@ -580,22 +783,17 @@ function rebuildFoil() {
 
   const matConfig = MATERIALS.find((m) => m.id === state.material);
   const isHotFoil = ["gold", "silber", "kupfer"].includes(state.material);
-  const hasLogo = !!state.logoDataUrl && !!logoDiffuseTexture;
+  const hasPrintLogo = !!state.printLogoDataUrl && !!logoDiffuseTexture;
 
-  // Hot-Foil-Spot-Modus: Wenn metallisches Material + Logo → Folie wird Alu,
-  // Logo wird metallisch (echte Heißfolien-Simulation).
-  // Wenn nur Material gewählt ohne Logo → ganze Folie metallisch (Default).
+  // Hot-Foil-Spot-Modus: Wenn metallisches Material + PRINT-Logo → Folie wird Alu,
+  // Print-Logo wird metallisch als Overlay. Embossing bleibt unabhängig auf der Folie.
   let mainMaterial;
-  if (isHotFoil && hasLogo) {
+  if (isHotFoil && hasPrintLogo) {
     const aluBase = MATERIALS.find((m) => m.id === "alu_g");
-    // Hauptfolie wird Alu — Logo NICHT als Druck darauf, sondern als Overlay
     const tempLogoDiff = logoDiffuseTexture;
-    const tempLogoNorm = logoNormalMap;
-    logoDiffuseTexture = null;
-    logoNormalMap = state.embossingMode ? tempLogoNorm : null;
+    logoDiffuseTexture = null;  // Print-Logo nicht als Diffuse, sondern als Hot-Foil-Overlay
     mainMaterial = makeMaterial(aluBase);
     logoDiffuseTexture = tempLogoDiff;
-    logoNormalMap = tempLogoNorm;
   } else {
     mainMaterial = makeMaterial(matConfig);
   }
@@ -615,8 +813,8 @@ function rebuildFoil() {
     default:                 foilGroup = buildFlatFoil(rondeShape(d, false), mainMaterial); break;
   }
 
-  // Hot-Foil-Overlay: Logo wird metallisch in der gewählten Farbe
-  if (isHotFoil && hasLogo && !state.embossingMode) {
+  // Hot-Foil-Overlay: Print-Logo wird metallisch in der gewählten Farbe
+  if (isHotFoil && hasPrintLogo) {
     addHotFoilOverlay(foilGroup, d, matConfig);
   }
 
@@ -664,19 +862,20 @@ function addHotFoilOverlay(group, diameter, matConfig) {
 function updateInfoLabel() {
   const shape = SHAPES.find((s) => s.id === state.shape);
   const mat = MATERIALS.find((m) => m.id === state.material);
+  const praegung = PRAEGUNGEN.find((p) => p.id === state.praegung);
   const isHotFoil = ["gold", "silber", "kupfer"].includes(state.material);
-  const hasLogo = !!state.logoDataUrl;
-  let veredel = "";
-  if (hasLogo) {
-    if (state.embossingMode) {
-      veredel = " · Blindprägung";
-    } else if (isHotFoil) {
-      veredel = ` · Logo ${mat.label}`;
-    } else {
-      veredel = " · Druck";
-    }
+  const hasPrint = !!state.printLogoDataUrl;
+  const hasEmboss = !!state.embossLogoDataUrl;
+
+  const veredelParts: string[] = [];
+  if (hasPrint) {
+    veredelParts.push(isHotFoil ? `Logo ${mat.label}` : "Druck");
   }
-  const matLabel = isHotFoil && hasLogo ? "Alu glänzend" : mat.label;
+  if (hasEmboss) veredelParts.push("Logo-Prägung");
+  if (praegung && praegung.id !== "glatt") veredelParts.push(praegung.label);
+  const veredel = veredelParts.length ? " · " + veredelParts.join(" · ") : "";
+
+  const matLabel = isHotFoil && hasPrint ? "Alu glänzend" : mat.label;
   document.getElementById("canvasInfo").innerHTML =
     `<b>${shape.label}</b> ${shape.code !== "—" ? `[${shape.code}]` : ""} · Ø${state.diameter}mm · ${matLabel}${veredel}`;
 }
@@ -739,22 +938,29 @@ function loadImage(dataUrl) {
   });
 }
 
-async function refreshLogoTextures() {
-  if (!state.logoDataUrl) {
+async function refreshPrintLogo() {
+  if (!state.printLogoDataUrl) {
     logoDiffuseTexture = null;
-    logoNormalMap = null;
     rebuildFoil();
     return;
   }
-  const img = await loadImage(state.logoDataUrl);
-  // Diffuse
+  const img = await loadImage(state.printLogoDataUrl);
   const diffCanvas = document.createElement("canvas");
   diffCanvas.width = img.width; diffCanvas.height = img.height;
   diffCanvas.getContext("2d").drawImage(img, 0, 0);
   logoDiffuseTexture = new THREE.CanvasTexture(diffCanvas);
   logoDiffuseTexture.colorSpace = THREE.SRGBColorSpace;
   logoDiffuseTexture.needsUpdate = true;
-  // Normal Map
+  rebuildFoil();
+}
+
+async function refreshEmbossLogo() {
+  if (!state.embossLogoDataUrl) {
+    logoNormalMap = null;
+    rebuildFoil();
+    return;
+  }
+  const img = await loadImage(state.embossLogoDataUrl);
   const normCanvas = imageToNormalMapCanvas(img, state.embossStrength);
   logoNormalMap = new THREE.CanvasTexture(normCanvas);
   logoNormalMap.colorSpace = THREE.NoColorSpace;
@@ -825,22 +1031,7 @@ document.getElementById("diameterSlider").addEventListener("input", (e) => {
   rebuildFoil();
 });
 
-document.getElementById("logoBtn").onclick = () => document.getElementById("logoInput").click();
-document.getElementById("logoInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    state.logoDataUrl = reader.result;
-    const prev = document.getElementById("logoPreview");
-    prev.style.display = "block";
-    prev.style.backgroundImage = `url(${state.logoDataUrl})`;
-    refreshLogoTextures();
-  };
-  reader.readAsDataURL(file);
-});
-
-// === Sample-Logos · 1-Klick-Test für Demo (BaCo, Cosmetic-Crown, Pharma-Cross) ===
+// === Sample-Logos (für beide Slots verfügbar) ===
 const SAMPLE_LOGOS = [
   {
     name: "BaCo",
@@ -856,27 +1047,88 @@ const SAMPLE_LOGOS = [
   },
 ];
 
-function loadSampleLogo(svgString: string) {
-  const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
-  state.logoDataUrl = dataUrl;
-  const prev = document.getElementById("logoPreview");
-  prev.style.display = "block";
-  prev.style.backgroundImage = `url(${dataUrl})`;
-  refreshLogoTextures();
+function svgToDataUrl(svg: string): string {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-const sampleRow = document.getElementById("sampleLogosRow");
-SAMPLE_LOGOS.forEach((logo) => {
-  const btn = document.createElement("button");
-  btn.className = "btn";
-  btn.style.cssText = `
-    flex: 1; min-width: 0; padding: 8px 4px; font-size: 11px;
-    background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.3);
-  `;
-  btn.innerHTML = `<span style="font-size:10px; opacity:0.7; margin-right:4px;">📷</span>${logo.name}`;
-  btn.onclick = () => loadSampleLogo(logo.svg);
-  sampleRow.appendChild(btn);
+function setupLogoSlot(opts: {
+  btnId: string;
+  inputId: string;
+  previewId: string;
+  sampleRowId: string;
+  stateKey: "printLogoDataUrl" | "embossLogoDataUrl";
+  refresh: () => void;
+}) {
+  const btn = document.getElementById(opts.btnId)!;
+  const input = document.getElementById(opts.inputId) as HTMLInputElement;
+  const preview = document.getElementById(opts.previewId)!;
+  const sampleRow = document.getElementById(opts.sampleRowId)!;
+
+  function setDataUrl(url: string | null) {
+    state[opts.stateKey] = url;
+    if (url) {
+      preview.style.display = "block";
+      preview.style.backgroundImage = `url(${url})`;
+    } else {
+      preview.style.display = "none";
+      preview.style.backgroundImage = "";
+    }
+    opts.refresh();
+  }
+
+  btn.onclick = () => input.click();
+  input.addEventListener("change", (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setDataUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  });
+
+  // Sample-Logos
+  SAMPLE_LOGOS.forEach((logo) => {
+    const sBtn = document.createElement("button");
+    sBtn.className = "btn";
+    sBtn.style.cssText = `
+      flex: 1; min-width: 0; padding: 8px 4px; font-size: 12px;
+      background: rgba(230,0,126,0.06); border-color: rgba(230,0,126,0.25);
+    `;
+    sBtn.innerHTML = logo.name;
+    sBtn.onclick = () => setDataUrl(svgToDataUrl(logo.svg));
+    sampleRow.appendChild(sBtn);
+  });
+
+  return { setDataUrl };
+}
+
+const printLogoSlot = setupLogoSlot({
+  btnId: "printLogoBtn",
+  inputId: "printLogoInput",
+  previewId: "printLogoPreview",
+  sampleRowId: "printSampleLogosRow",
+  stateKey: "printLogoDataUrl",
+  refresh: refreshPrintLogo,
 });
+
+const embossLogoSlot = setupLogoSlot({
+  btnId: "embossLogoBtn",
+  inputId: "embossLogoInput",
+  previewId: "embossLogoPreview",
+  sampleRowId: "embossSampleLogosRow",
+  stateKey: "embossLogoDataUrl",
+  refresh: refreshEmbossLogo,
+});
+
+// embossStrengthGroup nur sichtbar wenn Emboss-Logo gesetzt
+function updateEmbossStrengthVisibility() {
+  document.getElementById("embossStrengthGroup")!.style.display =
+    state.embossLogoDataUrl ? "" : "none";
+}
+const _origRefreshEmboss = refreshEmbossLogo;
+(globalThis as any).refreshEmbossLogo = async () => {
+  await _origRefreshEmboss();
+  updateEmbossStrengthVisibility();
+};
 
 // === Smooth Form-Transition · Fade alte Group, fade neue rein ===
 let _previousFoilGroup: any = null;
@@ -941,44 +1193,41 @@ function rebuildFoilWithFade() {
 // Replace global rebuildFoil
 (window as any).rebuildFoil = rebuildFoilWithFade;
 
-const switchEl = document.getElementById("embossSwitch");
-const toggleRowEl = document.getElementById("embossToggle");
-function setEmboss(v) {
-  state.embossingMode = v;
-  switchEl.classList.toggle("on", v);
-  document.getElementById("embossDescr").textContent = v ? "An = Logo als Relief" : "Aus = Logo als Druckbild";
-  document.getElementById("embossStrengthGroup").style.display = v ? "" : "none";
-  refreshLogoTextures();
-}
-toggleRowEl.onclick = (e) => {
-  if (e.target.closest("input, button")) return;
-  setEmboss(!state.embossingMode);
-};
-
-document.getElementById("embossStrengthSlider").addEventListener("input", (e) => {
+document.getElementById("embossStrengthSlider")!.addEventListener("input", (e: any) => {
   state.embossStrength = +e.target.value;
-  document.getElementById("embossStrengthValue").textContent = state.embossStrength.toFixed(1);
-  if (state.embossingMode) refreshLogoTextures();
+  document.getElementById("embossStrengthValue")!.textContent = state.embossStrength.toFixed(1);
+  if (state.embossLogoDataUrl) refreshEmbossLogo();
 });
 
-document.getElementById("resetBtn").onclick = () => {
+document.getElementById("resetBtn")!.onclick = () => {
   state.shape = "ronde";
   state.diameter = 95;
   state.material = "alu_g";
-  state.logoDataUrl = null;
-  state.embossingMode = false;
+  state.praegung = "glatt";
+  state.printLogoDataUrl = null;
+  state.embossLogoDataUrl = null;
   state.embossStrength = 4;
-  document.getElementById("logoPreview").style.display = "none";
-  document.getElementById("logoInput").value = "";
-  document.getElementById("diameterSlider").value = 95;
-  document.getElementById("diameterValue").textContent = "95";
-  document.getElementById("embossStrengthSlider").value = 4;
-  document.getElementById("embossStrengthValue").textContent = "4.0";
-  switchEl.classList.remove("on");
-  document.getElementById("embossDescr").textContent = "Aus = Logo als Druckbild";
-  document.getElementById("embossStrengthGroup").style.display = "none";
-  document.querySelectorAll(".form-btn").forEach((b) => b.classList.toggle("active", b.dataset.id === "ronde"));
-  document.querySelectorAll(".chip").forEach((c) => {
+
+  // Logo-Previews zurücksetzen
+  ["printLogoPreview", "embossLogoPreview"].forEach((id) => {
+    const el = document.getElementById(id)!;
+    el.style.display = "none";
+    el.style.backgroundImage = "";
+  });
+  ["printLogoInput", "embossLogoInput"].forEach((id) => {
+    (document.getElementById(id) as HTMLInputElement).value = "";
+  });
+
+  (document.getElementById("diameterSlider") as HTMLInputElement).value = "95";
+  document.getElementById("diameterValue")!.textContent = "95";
+  (document.getElementById("embossStrengthSlider") as HTMLInputElement).value = "4";
+  document.getElementById("embossStrengthValue")!.textContent = "4.0";
+  document.getElementById("embossStrengthGroup")!.style.display = "none";
+
+  document.querySelectorAll(".form-btn").forEach((b: any) =>
+    b.classList.toggle("active", b.dataset.id === "ronde")
+  );
+  document.querySelectorAll("#materialPicker .chip").forEach((c: any) => {
     const mc = MATERIALS.find((mm) => mm.id === c.dataset.id);
     const active = c.dataset.id === "alu_g";
     c.classList.toggle("active", active);
@@ -986,34 +1235,105 @@ document.getElementById("resetBtn").onclick = () => {
     c.style.background = active ? mc.ui : "";
     c.style.color = active ? "#1a1a1a" : "";
   });
-  document.getElementById("shapeLabel").textContent = "Ronde (R)";
+  document.querySelectorAll("#praegungRow .chip").forEach((c: any) => {
+    const active = c.dataset.id === "glatt";
+    c.classList.toggle("active", active);
+    c.style.background = active ? "var(--magenta)" : "";
+    c.style.borderColor = active ? "var(--magenta)" : "";
+    c.style.color = active ? "#fff" : "";
+  });
   logoDiffuseTexture = null;
   logoNormalMap = null;
   rebuildFoil();
 };
 
 // ============================================================
-//  POST-PROCESSING · subtiler Bloom für Premium-Glanz
+//  POST-PROCESSING · CGI-Studio-Pipeline
+//  RenderPass → Bloom → Vignette+ColorGrade → SMAA → Output
 // ============================================================
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 
+// Bloom KOMPLETT AUS — echte Studio-Fotos haben kein Halo-Glow um Highlights.
+// Metallische Folien-Reflexionen sind scharf-definiert, nicht weich blooming.
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.35,  // strength · subtil, nicht überstrahlend
-  0.4,   // radius
-  0.85   // threshold · nur sehr helle Flächen (Heißfolien-Reflexionen)
+  0.0,   // strength = 0 → effektiv aus
+  0.0,
+  1.0    // threshold so hoch dass nichts blooming
 );
+bloomPass.enabled = false;  // belt + braces
 composer.addPass(bloomPass);
+
+// Cinematic-Shader · NUR noch ganz dezente Vignette (~Foto-Komposition), kein Filter
+const cinematicShader = {
+  uniforms: {
+    tDiffuse:  { value: null },
+    uTime:     { value: 0 },
+    uVigStr:   { value: 0.18 },                                  // sehr leicht
+    uVigSize:  { value: 0.75 },                                  // außen
+    uGrain:    { value: 0.0 },                                   // KEIN Grain
+    uTint:     { value: new THREE.Vector3(1.0, 1.0, 1.0) },      // 100% neutral
+    uContrast: { value: 1.0 },                                   // unverändert
+    uSatur:    { value: 1.0 },                                   // unverändert
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uTime;
+    uniform float uVigStr;
+    uniform float uVigSize;
+    uniform float uGrain;
+    uniform vec3  uTint;
+    uniform float uContrast;
+    uniform float uSatur;
+    varying vec2 vUv;
+
+    float rand(vec2 p) {
+      return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+    }
+
+    void main() {
+      vec3 col = texture2D(tDiffuse, vUv).rgb;
+
+      // Color-Grading · warm tint + contrast + saturation
+      col *= uTint;
+      col = (col - 0.5) * uContrast + 0.5;
+      float gray = dot(col, vec3(0.299, 0.587, 0.114));
+      col = mix(vec3(gray), col, uSatur);
+
+      // Vignette · radial darkening
+      vec2 q = vUv - 0.5;
+      float vig = smoothstep(uVigSize, uVigSize - 0.4, length(q));
+      col *= mix(1.0 - uVigStr * 0.5, 1.0, vig);
+
+      // Subtle film grain (animated)
+      float n = rand(vUv + vec2(uTime * 0.07));
+      col += (n - 0.5) * uGrain;
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+};
+const cinematicPass = new ShaderPass(cinematicShader);
+composer.addPass(cinematicPass);
+
+// Anti-Aliasing · SMAA für glatte Kanten
+const smaaPass = new SMAAPass(window.innerWidth, window.innerHeight);
+composer.addPass(smaaPass);
+
 composer.addPass(new OutputPass());
 
 // ============================================================
 //  RESIZE + ANIMATION LOOP
 // ============================================================
 function resize() {
-  const wrap = document.querySelector(".canvas-wrap");
-  const w = wrap.clientWidth;
-  const h = wrap.clientHeight;
+  const stage = document.getElementById("stage") || document.body;
+  const w = stage.clientWidth || window.innerWidth;
+  const h = stage.clientHeight || window.innerHeight;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
@@ -1022,52 +1342,67 @@ function resize() {
 window.addEventListener("resize", resize);
 resize();
 
+const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
   controls.update();
+  cinematicPass.uniforms.uTime.value = t;
   composer.render();
 }
 
 // ============================================================
-//  STRUKTURPRÄGUNG-PICKER · UI dynamisch
+//  STRUKTURPRÄGUNG-PICKER · UI dynamisch in .drawer-body einfügen
 // ============================================================
-const sampleRow_ref = document.getElementById("sampleLogosRow");
-if (sampleRow_ref && !document.getElementById("praegungRow")) {
+(function setupPraegungPicker() {
+  const drawerBody = document.querySelector(".drawer-body") as HTMLElement | null;
+  if (!drawerBody || document.getElementById("praegungRow")) return;
+
+  const printLogoBtn = document.getElementById("printLogoBtn");
+  const logoGroup = printLogoBtn ? printLogoBtn.closest(".group") : null;
+
   const praegungSection = document.createElement("div");
   praegungSection.className = "group";
   praegungSection.innerHTML = `
     <div class="group-title">
       <span>Strukturprägung</span>
-      <span class="value" id="praegungLabel">Glatt</span>
     </div>
-    <div class="form-grid" id="praegungRow" style="grid-template-columns: repeat(3, 1fr);"></div>
+    <div class="chip-row" id="praegungRow"></div>
   `;
-  // Insert vor dem "logoBtn"-Group (nach Material-Picker)
-  const logoBtn = document.getElementById("logoBtn");
-  if (logoBtn && logoBtn.parentElement && logoBtn.parentElement.parentElement) {
-    logoBtn.parentElement.parentElement.parentElement.insertBefore(
-      praegungSection,
-      logoBtn.parentElement.parentElement
-    );
+
+  // Wichtig: einfügen in .drawer-body (gleicher Padding-Container wie andere Sections)
+  if (logoGroup && logoGroup.parentElement === drawerBody) {
+    drawerBody.insertBefore(praegungSection, logoGroup);
+  } else {
+    drawerBody.appendChild(praegungSection);
   }
 
   const praegungRowEl = document.getElementById("praegungRow");
   PRAEGUNGEN.forEach((p) => {
     const btn = document.createElement("button");
-    btn.className = "form-btn" + (p.id === state.praegung ? " active" : "");
+    btn.className = "chip" + (p.id === state.praegung ? " active" : "");
     btn.dataset.id = p.id;
-    btn.innerHTML = `<div>${p.label}</div><div class="code">${p.ui}</div>`;
+    btn.textContent = p.label;
+    if (p.id === state.praegung) {
+      btn.style.background = "var(--magenta)";
+      btn.style.borderColor = "var(--magenta)";
+      btn.style.color = "#fff";
+    }
     btn.onclick = () => {
       state.praegung = p.id;
-      document.querySelectorAll("#praegungRow .form-btn").forEach((b) => {
-        b.classList.toggle("active", b.dataset.id === p.id);
+      document.querySelectorAll("#praegungRow .chip").forEach((b) => {
+        const el = b as HTMLElement;
+        const active = el.dataset.id === p.id;
+        el.classList.toggle("active", active);
+        el.style.background = active ? "var(--magenta)" : "";
+        el.style.borderColor = active ? "var(--magenta)" : "";
+        el.style.color = active ? "#fff" : "";
       });
-      document.getElementById("praegungLabel").textContent = p.label;
       rebuildFoil();
     };
     praegungRowEl.appendChild(btn);
   });
-}
+})();
 
 rebuildFoil();
 animate();
