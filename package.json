@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "serve": "vite preview --port 5002 --strictPort",
-    "deploy": "gh-pages -d dist --dotfiles"
+    "deploy": "pnpm run build && gh-pages -d dist --dotfiles"
   },
   "devDependencies": {
     "k3-plugin-api": "^1.0.7",

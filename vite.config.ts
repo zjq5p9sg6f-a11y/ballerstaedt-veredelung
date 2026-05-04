@@ -29,6 +29,7 @@ export default defineConfig({
       },
     }),
   ],
+  base: "./",
   build: {
     modulePreload: false,
     target: "esnext",
