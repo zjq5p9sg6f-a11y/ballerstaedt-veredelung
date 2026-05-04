@@ -199,8 +199,35 @@ function buildSealFoil(opts) {
       return buildFlatFoil(rondeGeo(diameterMm, false), material);
   }
 }
+const SHAPE_INDEX_MAP = [
+  "ronde",
+  "ronde-lasche",
+  "kappe",
+  "kappe-lasche",
+  "verformt-lasche",
+  "verformte-ronde",
+  "induktionssiegel",
+  "baco-bond"
+];
 function normalizeShape(raw) {
-  if (!raw) return "ronde";
+  if (raw === null || raw === undefined) return "ronde";
+  if (typeof raw === "number") {
+    if (raw >= 0 && raw < SHAPE_INDEX_MAP.length) return SHAPE_INDEX_MAP[raw];
+    if (raw >= 1 && raw <= SHAPE_INDEX_MAP.length) return SHAPE_INDEX_MAP[raw - 1];
+    return "ronde";
+  }
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    if (raw.value !== undefined) return normalizeShape(raw.value);
+    if (raw.label !== undefined) return normalizeShape(raw.label);
+    if (raw.name !== undefined) return normalizeShape(raw.name);
+    if (raw.id !== undefined) return normalizeShape(raw.id);
+    if (raw.code !== undefined) return normalizeShape(raw.code);
+    if (raw.text !== undefined) return normalizeShape(raw.text);
+    return "ronde";
+  }
+  if (Array.isArray(raw) && raw.length > 0) {
+    return normalizeShape(raw[0]);
+  }
   const s = String(raw).toLowerCase().trim();
   const idMatch = [
     "ronde-lasche",
@@ -215,13 +242,13 @@ function normalizeShape(raw) {
   for (const id of idMatch) {
     if (s === id) return id;
   }
-  if (s.includes("psl") || s.includes("baco bond") || s.includes("baco-bond")) return "baco-bond";
-  if (s.includes("ir") || s.includes("induktion")) return "induktionssiegel";
+  if (s.includes("psl") || s.includes("baco bond") || s.includes("baco-bond") || s.includes("r-r")) return "baco-bond";
+  if (s.includes("induktion") || s === "ir" || s.startsWith("ir ") || s.endsWith(" ir")) return "induktionssiegel";
   if (s.includes("verformt") && s.includes("lasche")) return "verformt-lasche";
   if (s.includes("verformt") || s.includes("oval")) return "verformte-ronde";
   if (s.includes("kappe") && s.includes("lasche")) return "kappe-lasche";
-  if (s.includes("kappe")) return "kappe";
-  if ((s.includes("ronde") || s.includes("flachplatine")) && s.includes("lasche")) return "ronde-lasche";
+  if (s.includes("kappe") || s === "k") return "kappe";
+  if ((s.includes("ronde") || s.includes("flachplatine") || s === "ar") && s.includes("lasche")) return "ronde-lasche";
   return "ronde";
 }
 const MATERIAL_PRESETS = [
@@ -233,7 +260,20 @@ const MATERIAL_PRESETS = [
   { id: "kupfer", label: "Kupfer-Lack", color: 12088115, metalness: 1, roughness: 0.18 }
 ];
 function normalizeMaterial(raw) {
-  if (!raw) return MATERIAL_PRESETS[0];
+  if (raw === null || raw === undefined) return MATERIAL_PRESETS[0];
+  if (typeof raw === "number") {
+    if (raw >= 0 && raw < MATERIAL_PRESETS.length) return MATERIAL_PRESETS[raw];
+    if (raw >= 1 && raw <= MATERIAL_PRESETS.length) return MATERIAL_PRESETS[raw - 1];
+    return MATERIAL_PRESETS[0];
+  }
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    if (raw.value !== undefined) return normalizeMaterial(raw.value);
+    if (raw.label !== undefined) return normalizeMaterial(raw.label);
+    if (raw.name !== undefined) return normalizeMaterial(raw.name);
+    if (raw.id !== undefined) return normalizeMaterial(raw.id);
+    return MATERIAL_PRESETS[0];
+  }
+  if (Array.isArray(raw) && raw.length > 0) return normalizeMaterial(raw[0]);
   const s = String(raw).toLowerCase().trim();
   for (const p of MATERIAL_PRESETS) {
     if (s === p.id) return p;
