@@ -5031,11 +5031,12 @@ class OutputPass extends Pass {
 
 }
 
+const STEP_BASE = new URL("./step/", document.baseURI).pathname;
 const STEP_FILES = {
-  "kappe": "/step/kappe.stp",
-  "kappe-lasche": "/step/kappe-lasche.stp",
-  "verformt-lasche": "/step/verformt-lasche.stp",
-  "verformte-ronde": "/step/verformte-ronde.stp"
+  "kappe": STEP_BASE + "kappe.stp",
+  "kappe-lasche": STEP_BASE + "kappe-lasche.stp",
+  "verformt-lasche": STEP_BASE + "verformt-lasche.stp",
+  "verformte-ronde": STEP_BASE + "verformte-ronde.stp"
 };
 const FORM_FLIP_Y = {
   "kappe": true,
