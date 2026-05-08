@@ -1,5 +1,5 @@
 import { i as init_1, b as ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__ } from './assets/ballerstaedt_mf_2_veredelung__mf_v__runtimeInit__mf_v__-BrmfrqAs.js';
-import exposesMap from './assets/virtualExposes-DMMjnpxH.js';
+import exposesMap from './assets/virtualExposes-wZs48jh6.js';
 import { _ as __vitePreload } from './assets/preload-helper-BazNuh42.js';
 
 const importMap = {

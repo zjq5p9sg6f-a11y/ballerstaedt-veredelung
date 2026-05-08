@@ -4,7 +4,10 @@
           <script type="module" src="./assets/hostInit-Ck9pEaDv.js"></script>
         
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0a0a0e" />
     <meta name="description" content="Ballerstaedt Siegelverschluss-Konfigurator — Veredelungen in 3D erlebbar: Form, Material, Logo, Prägung." />
     <title>Ballerstaedt · Siegelverschluss-Konfigurator</title>
 
@@ -35,7 +38,7 @@
         --sans:  "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; overflow: hidden; }
+      html, body { height: 100dvh; overflow: hidden; }
       body {
         font-family: var(--sans);
         font-size: 15px;
@@ -46,7 +49,14 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         letter-spacing: -0.005em;
+        /* Safe-Area-Insets als CSS-Variablen verfügbar */
+        --sai-t: env(safe-area-inset-top, 0px);
+        --sai-r: env(safe-area-inset-right, 0px);
+        --sai-b: env(safe-area-inset-bottom, 0px);
+        --sai-l: env(safe-area-inset-left, 0px);
       }
+      /* Canvas: iOS Touch-Pan/Zoom delegieren an OrbitControls, kein Browser-Scroll */
+      #canvas { touch-action: none; }
 
       /*  ╭─ STAGE · pure black ─────────────────────────────────╮ */
       #stage {
@@ -58,7 +68,10 @@
 
       /*  ╭─ BRAND MARK · echtes Ballerstaedt-Logo ─────────────╮ */
       .brand {
-        position: fixed; top: 30px; left: 42px; z-index: 10;
+        position: fixed;
+        top: calc(var(--sai-t) + 20px);
+        left: calc(var(--sai-l) + 28px);
+        z-index: 10;
         user-select: none;
       }
       .brand img {
@@ -68,7 +81,10 @@
         filter: drop-shadow(0 2px 12px rgba(230,0,126,0.15));
       }
       .brand-sub {
-        position: fixed; top: 80px; left: 42px; z-index: 10;
+        position: fixed;
+        top: calc(var(--sai-t) + 70px);
+        left: calc(var(--sai-l) + 28px);
+        z-index: 10;
         font-size: 10px;
         font-weight: 400;
         letter-spacing: 0.28em;
@@ -78,7 +94,10 @@
 
       /*  ╭─ STATUS-PILLE · top-right ───────────────────────────╮ */
       .status-pill {
-        position: fixed; top: 32px; right: 42px; z-index: 10;
+        position: fixed;
+        top: calc(var(--sai-t) + 22px);
+        right: calc(var(--sai-r) + 28px);
+        z-index: 10;
         display: flex; align-items: center; gap: 10px;
         padding: 8px 14px;
         background: var(--bg-elev);
@@ -102,7 +121,8 @@
 
       /*  ╭─ CONFIG SUMMARY · bottom-center ─────────────────────╮ */
       .summary {
-        position: fixed; left: 50%; bottom: 42px;
+        position: fixed; left: 50%;
+        bottom: calc(var(--sai-b) + 22px);
         transform: translateX(-50%); z-index: 10;
         display: flex; align-items: center; gap: 24px;
         padding: 16px 28px;
@@ -192,7 +212,7 @@
       .drawer-header {
         position: sticky; top: 0; z-index: 1;
         display: flex; align-items: center; justify-content: space-between;
-        padding: 26px 32px 16px;
+        padding: calc(var(--sai-t) + 22px) 32px 16px;
         background: linear-gradient(180deg, rgba(14,14,16,1) 70%, rgba(14,14,16,0));
       }
       .drawer-header h2 {
@@ -214,7 +234,7 @@
       }
       @media (max-width: 900px) { .drawer-header .close { display: block; } }
       .drawer-header .close:hover { color: var(--text); border-color: var(--text-3); }
-      .drawer-body { padding: 0 32px 32px; }
+      .drawer-body { padding: 0 32px calc(var(--sai-b) + 32px); }
       .drawer .group { margin-bottom: 26px; }
       .drawer .group-title {
         font-size: 11px;
@@ -364,8 +384,14 @@
         border: 1px solid rgba(212,175,55,0.18);
         border-radius: 16px;
         padding: 42px 48px 36px;
-        width: min(440px, 90vw);
+        width: min(440px, calc(100vw - var(--sai-l) - var(--sai-r) - 24px));
+        margin-top: var(--sai-t);
+        margin-bottom: var(--sai-b);
         box-shadow: var(--shadow-deep);
+      }
+      @media (max-width: 480px) {
+        .auth-card { padding: 32px 28px 28px; }
+        .auth-card .auth-brand img { height: 32px; }
       }
       .auth-card .auth-brand { margin-bottom: 14px; }
       .auth-card .auth-brand img {
@@ -429,12 +455,34 @@
       .drawer:hover { opacity: 1 !important; pointer-events: auto !important; visibility: visible !important; }
 
       @media (max-width: 720px) {
-        .brand { font-size: 18px; left: 22px; top: 22px; letter-spacing: 0.12em; }
-        .brand-sub { left: 22px; top: 50px; font-size: 9px; }
-        .status-pill { right: 22px; top: 24px; }
-        .summary { left: 12px; right: 12px; transform: none; bottom: 22px;
-                   flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; }
+        .brand { left: calc(var(--sai-l) + 16px); top: calc(var(--sai-t) + 14px); }
+        .brand img { height: 28px; }
+        .brand-sub { left: calc(var(--sai-l) + 16px); top: calc(var(--sai-t) + 48px); font-size: 9px; }
+        .status-pill { right: calc(var(--sai-r) + 16px); top: calc(var(--sai-t) + 14px);
+                       padding: 6px 10px; font-size: 10px; }
+        .summary {
+          left: calc(var(--sai-l) + 10px);
+          right: calc(var(--sai-r) + 10px);
+          transform: none;
+          bottom: calc(var(--sai-b) + 14px);
+          flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px;
+          max-width: none;
+        }
         .summary .divider { display: none; }
+        .summary .info { gap: 1px; }
+        .summary .label-small { font-size: 9px; }
+        .summary .value-big { font-size: 14px; }
+        .summary .open-config.mobile-only { padding: 12px 16px; font-size: 13px; }
+      }
+      /* iPhone-Drawer Vollbreite mit Safe-Area */
+      @media (max-width: 480px) {
+        .drawer {
+          width: 100vw;
+          padding-right: var(--sai-r);
+          padding-left: var(--sai-l);
+        }
+        .drawer-body { padding-left: 22px; padding-right: 22px; }
+        .drawer-header { padding-left: 22px; padding-right: 22px; }
       }
     </style>
     <script type="importmap">
@@ -445,7 +493,7 @@
         }
       }
     </script>
-    <script type="module" crossorigin src="./assets/index-DQozI7Aj.js"></script>
+    <script type="module" crossorigin src="./assets/index-1PAtNREn.js"></script>
   </head>
   <body>
     <!-- Passwort-Gate -->
@@ -569,6 +617,10 @@
         </div>
       </div>
     </aside>
+
+    <!-- occt-import-js (Open CASCADE WASM) muss VOR demo-main.ts laden damit
+         window.occtimportjs für STEP-Direct-Loader verfügbar ist -->
+    <script src="./occt-import-js.js"></script>
 
 
     <script>
