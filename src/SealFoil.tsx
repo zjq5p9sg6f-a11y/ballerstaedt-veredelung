@@ -7,6 +7,26 @@ import {
   normalizeMaterial,
   type ShapeId,
 } from "./seal-foil-geometry";
+import { SealFoilGLB } from "./SealFoilGLB";
+import { SealFoilSTEP } from "./SealFoilSTEP";
+
+// Form-IDs die eine STEP-Datei unter /step/ haben.
+// Direct-STEP-Loader nutzt occt-import-js (Open CASCADE WASM) → keine
+// Tessellations-Verluste, respektiert Original-Achsen + Multi-Solid-Strukturen.
+const FORM_STEP_MAP: Record<string, string> = {
+  "kappe":            "/step/kappe.stp",
+  "kappe-lasche":     "/step/kappe-lasche.stp",
+  "verformt-lasche":  "/step/verformt-lasche.stp",
+  "verformte-ronde":  "/step/verformte-ronde.stp",
+};
+
+// Fallback: pre-tessellierte GLBs (falls STEP-Loader fehlschlaegt)
+const FORM_GLB_MAP: Record<string, string> = {
+  "kappe":            "/models/kappe.glb",
+  "kappe-lasche":     "/models/kappe-lasche.glb",
+  "verformt-lasche":  "/models/verformt-lasche.glb",
+  "verformte-ronde":  "/models/verformte-ronde.glb",
+};
 
 export interface SealFoilProps {
   shape?: ShapeId | string;
@@ -66,18 +86,29 @@ export function SealFoil(props: SealFoilProps) {
     roughnessMap,
   ]);
 
+  // Bevorzugt: STEP-Direct-Loader (volle CAD-Genauigkeit, originale Achsen).
+  // Fallback bei Lade-Fehler: vorab-tesselliertes GLB.
+  // Wenn keines: parametrische Geometrie.
+  const stepUrl = FORM_STEP_MAP[normalizedShape];
+  const glbUrl = FORM_GLB_MAP[normalizedShape];
+
+  // eslint-disable-next-line no-console
+  console.log("[SealFoil] shape=", shape, "→ normalized=", normalizedShape, "→ stepUrl=", stepUrl, "glbUrl=", glbUrl);
+
   const group = useMemo(() => {
+    if (stepUrl || glbUrl) return null;
     return buildSealFoil({
       shape: normalizedShape,
       diameterMm,
       material,
     });
-  }, [normalizedShape, diameterMm, material]);
+  }, [normalizedShape, diameterMm, material, stepUrl, glbUrl]);
 
-  // Cleanup on unmount / re-build
-  // (useMemo regenerates group; old group's geometries+material get replaced — three.js
-  // garbage collects when references drop, but explicit dispose would be safer in a
-  // long-running session — Phase 1 polish.)
-
+  if (stepUrl) {
+    return <SealFoilSTEP url={stepUrl} material={material} diameterMm={diameterMm} />;
+  }
+  if (glbUrl) {
+    return <SealFoilGLB url={glbUrl} material={material} diameterMm={diameterMm} />;
+  }
   return <primitive object={group} />;
 }

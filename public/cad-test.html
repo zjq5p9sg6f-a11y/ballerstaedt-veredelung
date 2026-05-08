@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>CAD-Test · Direkter STEP-Loader</title>
+<style>
+  body { margin:0; background:#1a1a1a; color:#eee; font-family:-apple-system,sans-serif; }
+  header { padding:14px 20px; background:#000; border-bottom:1px solid #333; }
+  header h1 { margin:0; font-size:16px; font-weight:600; letter-spacing:0.04em; }
+  header .sub { font-size:12px; color:#888; margin-top:2px; }
+  #grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:#333; }
+  .cell { background:#1a1a1a; aspect-ratio:1; position:relative; }
+  .cell .label { position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.7); padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; z-index:10; }
+  .cell .info { position:absolute; bottom:8px; left:8px; right:8px; background:rgba(0,0,0,0.7); padding:4px 8px; border-radius:4px; font-size:10px; color:#aaa; z-index:10; }
+  .cell canvas { width:100%; height:100%; display:block; }
+  .err { color:#f55; }
+  .ok { color:#5f5; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CAD-Test · Direct STEP-Loader (occt-import-js + Three.js)</h1>
+  <div class="sub">4 STEP-Files aus public/step/. Auto-Rotate. Geometrie unverändert aus CAD.</div>
+</header>
+<div id="grid"></div>
+
+<!-- Three.js v0.137 hat noch global UMD ohne ESM-only Examples -->
+<script src="https://unpkg.com/three@0.137.0/build/three.min.js"></script>
+<script src="/occt-import-js.js"></script>
+<script>
+const FILES = [
+  { name: "K · Kappe ohne Lasche",       path: "/step/kappe.stp" },
+  { name: "AK · Kappe mit Lasche",       path: "/step/kappe-lasche.stp" },
+  { name: "AL · Tiefgezogen mit Lasche", path: "/step/verformt-lasche.stp" },
+  { name: "Tiefgezogen ohne Lasche",     path: "/step/verformte-ronde.stp" },
+];
+
+const grid = document.getElementById("grid");
+
+function makeCell(name) {
+  const cell = document.createElement("div");
+  cell.className = "cell";
+  cell.innerHTML = `<div class="label">${name}</div><div class="info">Lade...</div>`;
+  grid.appendChild(cell);
+  return cell;
+}
+
+async function buildScene(cell, fileName, filePath, occt) {
+  const info = cell.querySelector(".info");
+  try {
+    info.textContent = "Fetch STEP...";
+    const resp = await fetch(filePath);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const buf = new Uint8Array(await resp.arrayBuffer());
+
+    info.textContent = "Parse CAD...";
+    const result = occt.ReadStepFile(buf, {
+      linearUnit: "millimeter",
+      linearDeflectionType: "absolute_value",
+      linearDeflection: 0.01,
+      angularDeflection: 0.1,
+    });
+    if (!result.success) throw new Error("parse failed");
+    if (!result.meshes || !result.meshes.length) throw new Error("no meshes in STEP");
+
+    const w = cell.clientWidth, h = cell.clientHeight;
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    cell.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a1a);
+    scene.add(new THREE.AmbientLight(0x666666, 1.0));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+    dir.position.set(100, 200, 150);
+    scene.add(dir);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.4);
+    dir2.position.set(-100, -100, 100);
+    scene.add(dir2);
+
+    const group = new THREE.Group();
+    const bbox = new THREE.Box3();
+    let totalVerts = 0, totalFaces = 0;
+
+    for (const m of result.meshes) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
+      if (m.attributes.normal) {
+        g.setAttribute("normal", new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
+      }
+      if (m.index) {
+        g.setIndex(new THREE.BufferAttribute(Uint32Array.from(m.index.array), 1));
+      }
+      if (!m.attributes.normal) g.computeVertexNormals();
+      g.computeBoundingBox();
+      bbox.union(g.boundingBox);
+      totalVerts += m.attributes.position.array.length / 3;
+      if (m.index) totalFaces += m.index.array.length / 3;
+
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0xc8c8c8,
+        metalness: 0.6,
+        roughness: 0.35,
+        side: THREE.DoubleSide,
+      });
+      group.add(new THREE.Mesh(g, mat));
+    }
+
+    const center = bbox.getCenter(new THREE.Vector3());
+    group.position.sub(center);
+    scene.add(group);
+
+    const size = bbox.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, maxDim * 100);
+    const camDist = maxDim * 2.0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = performance.now() * 0.0005;
+      camera.position.set(
+        Math.cos(t) * camDist,
+        camDist * 0.5,
+        Math.sin(t) * camDist
+      );
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    info.innerHTML = `<span class="ok">✓</span> bbox: ${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} mm · ${totalVerts} verts · ${result.meshes.length} mesh${result.meshes.length !== 1 ? "es" : ""}`;
+  } catch (e) {
+    console.error(fileName, e);
+    info.innerHTML = `<span class="err">✗ ${String(e.message || e)}</span>`;
+  }
+}
+
+(async () => {
+  // Pre-create cells immediately so user sees structure
+  const cells = FILES.map((f) => ({ file: f, cell: makeCell(f.name) }));
+
+  if (typeof THREE === "undefined") {
+    cells.forEach(({ cell }) => {
+      cell.querySelector(".info").innerHTML = '<span class="err">✗ Three.js nicht geladen (Network blockiert?)</span>';
+    });
+    return;
+  }
+  if (typeof occtimportjs === "undefined") {
+    cells.forEach(({ cell }) => {
+      cell.querySelector(".info").innerHTML = '<span class="err">✗ occt-import-js nicht geladen</span>';
+    });
+    return;
+  }
+
+  let occt;
+  try {
+    occt = await occtimportjs();
+  } catch (e) {
+    console.error("occt init", e);
+    cells.forEach(({ cell }) => {
+      cell.querySelector(".info").innerHTML = `<span class="err">✗ occt init: ${e.message || e}</span>`;
+    });
+    return;
+  }
+
+  for (const { file, cell } of cells) {
+    await buildScene(cell, file.name, file.path, occt);
+  }
+})();
+</script>
+</body>
+</html>

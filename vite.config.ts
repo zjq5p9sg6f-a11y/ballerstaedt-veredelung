@@ -48,6 +48,9 @@ export default defineConfig({
   },
   server: {
     cors: true,
+    host: true,
+    // @ts-expect-error allowedHosts wird zur Laufzeit unterstützt, TS-Type evtl. älter
+    allowedHosts: true,
     headers: {
       "Access-Control-Allow-Origin": "*",
     },

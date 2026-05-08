@@ -57,10 +57,12 @@ def step_to_stl(step_path: str, stl_path: str, deflection: float = 0.05) -> dict
     compound = Part.makeCompound(shapes) if len(shapes) > 1 else shapes[0]
 
     # Tessellation: Shape → Mesh
+    # Print-Quality-Defaults: linear 0.01 mm, angular 0.1 rad (~5.7°)
+    # → 5-10× mehr Vertices als bei 0.05 / 0.5, weiche Krummungen
     mesh = MeshPart.meshFromShape(
         Shape=compound,
         LinearDeflection=deflection,
-        AngularDeflection=0.5,
+        AngularDeflection=0.1,
         Relative=False,
     )
 

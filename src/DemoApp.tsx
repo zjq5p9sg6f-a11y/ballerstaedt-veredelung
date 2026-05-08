@@ -35,7 +35,9 @@ const FOIL_COLORS: { label: string; color: string; metalness: number; roughness:
 
 export function DemoApp() {
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
-  const [shape, setShape] = useState<"round" | "oval">("round");
+  // shape-IDs matchen FORMEN aus baco-catalog.ts. Die mit STEP-File werden
+  // direkt aus CAD geladen (occt-import-js), die anderen parametrisch.
+  const [shape, setShape] = useState<string>("ronde");
   const [diameter, setDiameter] = useState(95);
   const [embossingMode, setEmbossingMode] = useState(false);
   const [colorIdx, setColorIdx] = useState(0);
@@ -81,7 +83,7 @@ export function DemoApp() {
 
   const reset = () => {
     setLogoDataUrl(null);
-    setShape("round");
+    setShape("ronde");
     setDiameter(95);
     setEmbossingMode(false);
     setColorIdx(0);
@@ -129,9 +131,15 @@ export function DemoApp() {
                   exclusive
                   onChange={(_e, v) => v && setShape(v)}
                   fullWidth
+                  orientation="vertical"
+                  sx={{ "& .MuiToggleButton-root": { justifyContent: "flex-start", textAlign: "left" } }}
                 >
-                  <ToggleButton value="round">Ronde (rund)</ToggleButton>
-                  <ToggleButton value="oval">Verformt</ToggleButton>
+                  <ToggleButton value="ronde">Ronde (parametrisch)</ToggleButton>
+                  <ToggleButton value="ronde-lasche">Ronde mit Lasche (parametrisch)</ToggleButton>
+                  <ToggleButton value="kappe">K · Kappe ohne Lasche</ToggleButton>
+                  <ToggleButton value="kappe-lasche">AK · Kappe mit Lasche</ToggleButton>
+                  <ToggleButton value="verformt-lasche">AL · Tiefgezogen mit Lasche</ToggleButton>
+                  <ToggleButton value="verformte-ronde">Tiefgezogen ohne Lasche</ToggleButton>
                 </ToggleButtonGroup>
               </Box>
 
@@ -289,7 +297,17 @@ export function DemoApp() {
                 fontFamily: "monospace",
               }}
             >
-              {shape === "round" ? `Ronde Ø${diameter}mm` : `Verformt ${(diameter * 0.85).toFixed(0)}×${(diameter * 0.6).toFixed(0)}mm`}
+              {(() => {
+                const labels: Record<string, string> = {
+                  "ronde":           `Ronde Ø${diameter}mm`,
+                  "ronde-lasche":    `Ronde mit Lasche Ø${diameter}mm`,
+                  "kappe":           `K · Kappe ohne Lasche Ø${diameter}mm`,
+                  "kappe-lasche":    `AK · Kappe mit Lasche Ø${diameter}mm`,
+                  "verformt-lasche": `AL · Tiefgezogen mit Lasche Ø${diameter}mm`,
+                  "verformte-ronde": `Tiefgezogen ohne Lasche Ø${diameter}mm`,
+                };
+                return labels[shape] ?? `${shape} Ø${diameter}mm`;
+              })()}
               {logoDataUrl && (embossingMode ? " · Blindprägung" : " · Druck")} · {palette.label}
             </Box>
           </Paper>

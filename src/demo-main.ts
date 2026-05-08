@@ -1,6 +1,186 @@
 // @ts-nocheck
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+// ============================================================
+//  STEP-Direct-Loader (Open CASCADE WASM via window.occtimportjs)
+//  Lädt CAD-Original direkt im Browser ohne Tessellations-Verlust.
+//  Cache + Preload damit Form-Switch instant ist.
+// ============================================================
+// Relative Pfade damit GitHub-Pages-Subpath (/ballerstaedt-veredelung/) +
+// Vite-base "./" sauber funktioniert. Absolute /step/... würde auf
+// www-root statt App-Root zeigen.
+const STEP_BASE = new URL("./step/", document.baseURI).pathname;
+const STEP_FILES: Record<string, string> = {
+  "kappe":           STEP_BASE + "kappe.stp",
+  "kappe-lasche":    STEP_BASE + "kappe-lasche.stp",
+  "verformt-lasche": STEP_BASE + "verformt-lasche.stp",
+  "verformte-ronde": STEP_BASE + "verformte-ronde.stp",
+};
+// Pro Form-ID: Y-Flip damit die Folie korrekt orientiert ist.
+// CAD-Konvention pro File unterschiedlich:
+// - Kappen: Y bereits oben → Flip ON damit Volumen nach unten zeigt (Becher-Form)
+// - Tiefgezogene: alignShortestAxisToY rotiert schon korrekt → kein Flip
+const FORM_FLIP_Y: Record<string, boolean> = {
+  "kappe":           true,
+  "kappe-lasche":    true,
+  "verformt-lasche": false,
+  "verformte-ronde": false,
+};
+
+type StepGeo = {
+  geometries: THREE.BufferGeometry[];
+  bbox: THREE.Box3;
+  cadDiameterMm: number;
+};
+const stepGeoCache: Map<string, Promise<StepGeo>> = new Map();
+let occtPromise: Promise<any> | null = null;
+
+function getOcct(): Promise<any> {
+  if (occtPromise) return occtPromise;
+  if (typeof (window as any).occtimportjs !== "function") {
+    occtPromise = Promise.reject(new Error("occt-import-js not loaded"));
+    return occtPromise;
+  }
+  occtPromise = (window as any).occtimportjs();
+  return occtPromise;
+}
+
+// Identifiziert die kürzeste Achse (Höhe einer flachen Folie) und rotiert
+// alle Geometrien sodass diese Achse → Y zeigt (Three.js Standard Y-up).
+// STEP-Konvention ist inkonsistent: manche Files haben Z-up, manche Y-up.
+function alignShortestAxisToY(geometries: THREE.BufferGeometry[]): void {
+  const bbox = new THREE.Box3();
+  for (const g of geometries) {
+    g.computeBoundingBox();
+    bbox.union(g.boundingBox!);
+  }
+  const size = bbox.getSize(new THREE.Vector3());
+  // welche Achse ist kürzeste?
+  let rotation: THREE.Matrix4 | null = null;
+  if (size.y <= size.x && size.y <= size.z) {
+    rotation = null;  // Y bereits kürzeste
+  } else if (size.z <= size.x && size.z <= size.y) {
+    // Z ist kürzeste → -90° um X: (x, y, z) → (x, z, -y)
+    rotation = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
+  } else {
+    // X ist kürzeste → -90° um Z: (x, y, z) → (y, -x, z)
+    rotation = new THREE.Matrix4().makeRotationZ(-Math.PI / 2);
+  }
+  if (rotation) {
+    for (const g of geometries) {
+      g.applyMatrix4(rotation);
+      g.computeVertexNormals();
+      g.computeBoundingBox();
+    }
+  }
+}
+
+// Generiert planare UV-Koordinaten aus Top-Down (XZ-Ebene) Projektion.
+// Notwendig damit NormalMap (Prägungs-Pattern) auf der STEP-Geometrie sichtbar wird.
+function generatePlanarUV(geometries: THREE.BufferGeometry[]): void {
+  const bbox = new THREE.Box3();
+  for (const g of geometries) bbox.union(g.boundingBox!);
+  const size = bbox.getSize(new THREE.Vector3());
+  const min = bbox.min;
+  for (const g of geometries) {
+    const positions = g.attributes.position;
+    const uvs = new Float32Array(positions.count * 2);
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i);
+      const z = positions.getZ(i);
+      uvs[i * 2] = (x - min.x) / size.x;
+      uvs[i * 2 + 1] = (z - min.z) / size.z;
+    }
+    g.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  }
+}
+
+async function loadStep(url: string): Promise<StepGeo> {
+  const cached = stepGeoCache.get(url);
+  if (cached) return cached;
+  const p = (async () => {
+    const occt = await getOcct();
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`fetch ${url}: HTTP ${resp.status}`);
+    const buf = new Uint8Array(await resp.arrayBuffer());
+    const result = occt.ReadStepFile(buf, {
+      linearUnit: "millimeter",
+      linearDeflectionType: "absolute_value",
+      linearDeflection: 0.01,
+      angularDeflection: 0.1,
+    });
+    if (!result.success) throw new Error(`STEP parse failed: ${url}`);
+    const geometries: THREE.BufferGeometry[] = [];
+    for (const m of result.meshes) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(m.attributes.position.array, 3)
+      );
+      if (m.attributes.normal) {
+        g.setAttribute(
+          "normal",
+          new THREE.Float32BufferAttribute(m.attributes.normal.array, 3)
+        );
+      }
+      if (m.index) {
+        g.setIndex(new THREE.BufferAttribute(Uint32Array.from(m.index.array), 1));
+      }
+      if (!m.attributes.normal) g.computeVertexNormals();
+      geometries.push(g);
+    }
+    // 1. Auto-Achsen-Alignment: kürzeste BBox-Achse → Y (Y-Up Konvention)
+    alignShortestAxisToY(geometries);
+    // 2. UV-Planar-Projektion damit Prägung-NormalMap auf STEP-Geo sichtbar
+    generatePlanarUV(geometries);
+    // 3. finale BBox + cad-Durchmesser
+    const bbox = new THREE.Box3();
+    for (const g of geometries) bbox.union(g.boundingBox!);
+    const size = bbox.getSize(new THREE.Vector3());
+    const cadDiameterMm = Math.max(size.x, size.z);  // X-Z Durchmesser, nicht Y-Höhe
+    return { geometries, bbox, cadDiameterMm };
+  })();
+  stepGeoCache.set(url, p);
+  return p;
+}
+
+// Preload alle 4 STEP-Files beim Module-Load damit Form-Switch instant ist
+function preloadAllSteps() {
+  for (const url of Object.values(STEP_FILES)) {
+    loadStep(url).catch(() => { /* swallow, retry on demand */ });
+  }
+}
+preloadAllSteps();
+
+// Builds Three.js Group from cached STEP-Geo. Material wird applied,
+// Group wird zentriert + auf gewünschten Durchmesser skaliert.
+function buildStepGroup(stepGeo: StepGeo, material: THREE.Material, diameterMm: number, mmToScene: number, flipY: boolean): THREE.Group {
+  // Clone Material + FrontSide damit dünne Folien-Wand nicht solid wirkt.
+  // (DoubleSide rendert Innenseite mit, wirkt wie gefräster Block.)
+  const stepMaterial = (material as any).clone ? (material as any).clone() : material;
+  if (stepMaterial && (stepMaterial as any).side !== undefined) {
+    (stepMaterial as any).side = THREE.FrontSide;
+  }
+  const inner = new THREE.Group();
+  for (const g of stepGeo.geometries) {
+    const mesh = new THREE.Mesh(g, stepMaterial);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    inner.add(mesh);
+  }
+  const center = stepGeo.bbox.getCenter(new THREE.Vector3());
+  inner.position.sub(center);
+  const outer = new THREE.Group();
+  outer.add(inner);
+  // Skaliere auf gewünschten Durchmesser in Tool-Welt-Einheiten
+  const scale = (diameterMm * mmToScene) / stepGeo.cadDiameterMm;
+  outer.scale.setScalar(scale);
+  // Y-Flip damit Wölbung (Außenseite) nach oben zeigt
+  if (flipY) outer.rotation.x = Math.PI;
+  return outer;
+}
+
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -280,10 +460,8 @@ const SHAPES = [
   { id: "ronde-lasche",     label: "Ronde · Lasche",   code: "AR" },
   { id: "kappe",            label: "Kappe",            code: "K" },
   { id: "kappe-lasche",     label: "Kappe · Lasche",   code: "AK" },
-  { id: "verformt-lasche",  label: "Verformt · Lasche",code: "AL" },
-  { id: "verformte-ronde",  label: "Verformt",         code: "—" },
-  { id: "induktionssiegel", label: "Induktion",        code: "IR" },
-  { id: "baco-bond",        label: "BaCo Bond",        code: "PSL" },
+  { id: "verformt-lasche",  label: "AL · Tiefgezogen · Lasche", code: "AL" },
+  { id: "verformte-ronde",  label: "Tiefgezogen ohne Lasche", code: "—" },
 ];
 
 const MATERIALS = [
@@ -309,6 +487,7 @@ const state: any = {
 };
 
 let foilGroup = null;
+let rebuildGen = 0;  // Race-Schutz fuer asynchrone STEP-Loads
 let logoDiffuseTexture = null;
 let logoNormalMap = null;
 
@@ -800,7 +979,46 @@ function rebuildFoil() {
 
   const d = state.diameter;
 
-  switch (state.shape) {
+  // STEP-Direct-Loader für CAD-Formen (asynchron via occt-import-js).
+  // Group wird leer in scene gepusht, async befüllt sobald STEP geparsed.
+  // Race-Schutz via Object-Identität: wenn foilGroup ersetzt wurde
+  // (späterer rebuild), wird der Resolve verworfen.
+  const stepUrl = STEP_FILES[state.shape];
+  if (stepUrl) {
+    const myGroup = new THREE.Group();
+    foilGroup = myGroup;
+    const myShape = state.shape;
+    const myDiameter = d;
+    const myMaterial = mainMaterial;
+    const t0 = performance.now();
+    const cacheHit = stepGeoCache.has(stepUrl);
+    // eslint-disable-next-line no-console
+    console.log(`[STEP] ${myShape} start ${cacheHit ? "(Cache-Hit)" : "(Cold-Load)"}`);
+    if (!cacheHit) {
+      const info = document.getElementById("canvasInfo");
+      if (info) info.innerHTML = `<span style="color:#ffb">⏳ Lade CAD-Modell ${myShape}...</span>`;
+    }
+    loadStep(stepUrl).then((stepGeo) => {
+      if (foilGroup !== myGroup) {
+        // eslint-disable-next-line no-console
+        console.log(`[STEP] ${myShape} verworfen (neuer Build hat foilGroup ersetzt)`);
+        return;
+      }
+      const flipY = !!FORM_FLIP_Y[myShape];
+      const built = buildStepGroup(stepGeo, myMaterial, myDiameter, MM, flipY);
+      myGroup.add(built);
+      // Force a render-trigger durch scene-Mutation bemerken
+      if (myGroup.parent) myGroup.parent.matrixWorldNeedsUpdate = true;
+      // eslint-disable-next-line no-console
+      console.log(`[STEP] ${myShape} fertig in ${(performance.now() - t0).toFixed(0)}ms · children=${myGroup.children.length} · in-scene=${!!myGroup.parent}`);
+      updateInfoLabel();
+    }).catch((e) => {
+      // eslint-disable-next-line no-console
+      console.error("[STEP-Load]", myShape, e);
+      const info = document.getElementById("canvasInfo");
+      if (info) info.innerHTML = `<span style="color:#f55">✗ STEP-Fehler: ${e.message}</span>`;
+    });
+  } else switch (state.shape) {
     case "ronde":            foilGroup = buildFlatFoil(rondeShape(d, false), mainMaterial); break;
     case "ronde-lasche":     foilGroup = buildFlatFoil(rondeShape(d, true),  mainMaterial); break;
     case "kappe":            foilGroup = buildKappe(d, mainMaterial, false); break;
@@ -1001,6 +1219,69 @@ SHAPES.forEach((s) => {
   shapePickerEl.appendChild(btn);
 });
 
+// ============================================================
+//  MATERIAL-DEPENDENT CONSTRAINTS
+//  Kunststoff-Folie: kann nicht tiefgezogen werden, nur Nadelstich-Prägung
+// ============================================================
+const TIEFGEZOGEN_FORMS = new Set(["verformt-lasche", "verformte-ronde"]);
+const KUNSTSTOFF_ALLOWED_PRAEGUNGEN = new Set(["glatt", "nadelstich"]);
+
+function isKunststoff(matId: string): boolean { return matId === "kunst"; }
+function isShapeAllowed(shapeId: string, matId: string): boolean {
+  if (isKunststoff(matId) && TIEFGEZOGEN_FORMS.has(shapeId)) return false;
+  return true;
+}
+function isPraegungAllowed(praegungId: string, matId: string): boolean {
+  if (isKunststoff(matId) && !KUNSTSTOFF_ALLOWED_PRAEGUNGEN.has(praegungId)) return false;
+  return true;
+}
+
+// Disabled-Style auf Buttons setzen + Tooltip mit Begründung
+function applyDisabledStyle(el: HTMLElement, disabled: boolean, reason: string) {
+  el.style.opacity = disabled ? "0.3" : "";
+  el.style.pointerEvents = disabled ? "none" : "";
+  el.style.cursor = disabled ? "not-allowed" : "";
+  el.title = disabled ? reason : "";
+}
+
+function updateMaterialDependentUI() {
+  // Form-Buttons disablen wenn Kunststoff + tiefgezogen
+  document.querySelectorAll("#shapePicker .form-btn").forEach((b) => {
+    const el = b as HTMLElement;
+    const allowed = isShapeAllowed(el.dataset.id!, state.material);
+    applyDisabledStyle(el, !allowed, "Kunststoff-Folien können nicht tiefgezogen werden");
+  });
+  // Praegung-Chips disablen wenn Kunststoff + andere als Nadelstich/Glatt
+  document.querySelectorAll("#praegungRow .chip").forEach((c) => {
+    const el = c as HTMLElement;
+    const allowed = isPraegungAllowed(el.dataset.id!, state.material);
+    applyDisabledStyle(el, !allowed, "Bei Kunststoff nur Nadelstich-Prägung möglich");
+  });
+}
+
+// Programmatisch Form/Praegung wechseln + UI synchronisieren (für Auto-Fallback)
+function setShapeProgrammatic(newShapeId: string) {
+  state.shape = newShapeId;
+  document.querySelectorAll("#shapePicker .form-btn").forEach((b) => {
+    const el = b as HTMLElement;
+    el.classList.toggle("active", el.dataset.id === newShapeId);
+  });
+  const s = SHAPES.find((x) => x.id === newShapeId);
+  const label = document.getElementById("shapeLabel");
+  if (s && label) label.textContent = `${s.label} (${s.code})`;
+}
+function setPraegungProgrammatic(newPraegungId: string) {
+  state.praegung = newPraegungId;
+  document.querySelectorAll("#praegungRow .chip").forEach((b) => {
+    const el = b as HTMLElement;
+    const active = el.dataset.id === newPraegungId;
+    el.classList.toggle("active", active);
+    el.style.background = active ? "var(--magenta)" : "";
+    el.style.borderColor = active ? "var(--magenta)" : "";
+    el.style.color = active ? "#fff" : "";
+  });
+}
+
 const matPickerEl = document.getElementById("materialPicker");
 MATERIALS.forEach((m) => {
   const chip = document.createElement("button");
@@ -1013,13 +1294,22 @@ MATERIALS.forEach((m) => {
   chip.onclick = () => {
     state.material = m.id;
     document.querySelectorAll(".chip").forEach((c) => {
-      const mc = MATERIALS.find((mm) => mm.id === c.dataset.id);
-      const active = c.dataset.id === m.id;
+      const mc = MATERIALS.find((mm) => mm.id === (c as HTMLElement).dataset.id);
+      if (!mc) return;
+      const active = (c as HTMLElement).dataset.id === m.id;
       c.classList.toggle("active", active);
-      c.style.borderColor = active ? mc.ui : "";
-      c.style.background = active ? mc.ui : "";
-      c.style.color = active ? "#1a1a1a" : "";
+      (c as HTMLElement).style.borderColor = active ? mc.ui : "";
+      (c as HTMLElement).style.background = active ? mc.ui : "";
+      (c as HTMLElement).style.color = active ? "#1a1a1a" : "";
     });
+    // Auto-Fallback wenn aktuelle Form/Praegung bei neuem Material nicht mehr erlaubt
+    if (!isShapeAllowed(state.shape, state.material)) {
+      setShapeProgrammatic("ronde");
+    }
+    if (!isPraegungAllowed(state.praegung, state.material)) {
+      setPraegungProgrammatic("nadelstich");
+    }
+    updateMaterialDependentUI();
     rebuildFoil();
   };
   matPickerEl.appendChild(chip);

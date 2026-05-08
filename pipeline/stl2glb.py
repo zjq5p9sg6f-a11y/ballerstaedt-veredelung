@@ -32,12 +32,29 @@ def stl_to_glb(stl_path: str, glb_path: str, scale: float = 1.0) -> dict:
     if scale != 1.0:
         mesh.apply_scale(scale)
 
-    # Optional: Centering für Three.js-friendly origin
-    # mesh.apply_translation(-mesh.centroid)
-
-    # Repair: doppelte Vertices entfernen, Normals neu berechnen
+    # CAD-Render-Qualitaet: Vertex-Normals fuer smooth shading.
+    # 1. merge_vertices OHNE merge_norm: STL hat Position-Duplikate (3 Vertices
+    #    pro Face, jeder mit Face-Normal). Mergen vereint die zu 1 Vertex →
+    #    trimesh gemittelt area-weighted die incident-Face-Normals → smooth.
+    #    Mit merge_norm=True wuerde es Position-Duplikate mit verschiedenen
+    #    Normals NICHT mergen → Sharp Edges erhalten, aber kein Smoothing.
+    # 2. fix_normals: Face-Normals nach aussen orientieren
+    # 3. apply_translation(-mesh.centroid): Origin in Mesh-Mitte (Tool nimmt
+    #    sonst CAD-Origin der oft am Rand sitzt)
+    # 4. Z-up→Y-up Rotation: STEP-Konvention ist Z-up, Three.js arbeitet Y-up.
+    #    -90° um X-Achse rotiert Z-Up nach Y-Up.
     mesh.merge_vertices()
     mesh.fix_normals()
+    mesh.apply_translation(-mesh.centroid)
+    # Z-up → Y-up: -90° um X-Achse
+    rotation = trimesh.transformations.rotation_matrix(
+        angle=-3.141592653589793 / 2,
+        direction=[1, 0, 0],
+        point=[0, 0, 0],
+    )
+    mesh.apply_transform(rotation)
+    # Vertex-Normals erzwingen (lazy property)
+    _ = mesh.vertex_normals
 
     os.makedirs(os.path.dirname(glb_path) or ".", exist_ok=True)
     mesh.export(glb_path)

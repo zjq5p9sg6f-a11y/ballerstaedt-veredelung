@@ -14,6 +14,7 @@ set -e
 PIPELINE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SAMPLES_DIR="$PIPELINE_DIR/samples"
 OUTPUT_DIR="$PIPELINE_DIR/output"
+DEFLECTION="${DEFLECTION:-0.01}"  # Print-Quality default (war 0.05). Ueberschreibbar via env
 
 # FreeCAD-CLI auf macOS
 FREECAD_CMD="/Applications/FreeCAD.app/Contents/Resources/bin/FreeCADCmd"
@@ -74,7 +75,7 @@ for step_file in "${files[@]}"; do
   echo "▶ $base"
   echo "  → $stl_path"
 
-  if ! freecad_run "$PIPELINE_DIR/step2stl.py" "$step_file" "$stl_path" "0.05"; then
+  if ! freecad_run "$PIPELINE_DIR/step2stl.py" "$step_file" "$stl_path" "$DEFLECTION"; then
     echo "  ✗ STEP→STL fehlgeschlagen"
     fails=$((fails + 1))
     continue

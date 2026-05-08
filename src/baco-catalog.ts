@@ -28,9 +28,7 @@ export const FORMEN: CatalogValue[] = [
   { id: "kappe",            label: "Kappe",                  code: "K" },
   { id: "kappe-lasche",     label: "Kappe mit Lasche",       code: "AK" },
   { id: "verformt-lasche",  label: "Verformt mit Lasche",    code: "AL" },
-  { id: "verformte-ronde",  label: "Verformte Ronde" },
-  { id: "induktionssiegel", label: "Induktionssiegel",       code: "IR" },
-  { id: "baco-bond",        label: "BaCo Bond (drucksensitive Einlage)", code: "R-R / PSL" },
+  { id: "verformte-ronde",  label: "Tiefgezogen ohne Lasche" },
 ];
 
 // === SCHRITT 2 · PRÄGUNG (12 Werte, BaCo Basics 3.0 PDF S.44) ===

@@ -191,10 +191,8 @@ const SealFoilDynamic = (props: any) => {
     { id: "ronde-lasche", label: "Ronde·Lasche", code: "AR" },
     { id: "kappe", label: "Kappe", code: "K" },
     { id: "kappe-lasche", label: "Kappe·Lasche", code: "AK" },
-    { id: "verformt-lasche", label: "Verformt·Lasche", code: "AL" },
-    { id: "verformte-ronde", label: "Verformt", code: "—" },
-    { id: "induktionssiegel", label: "Induktion", code: "IR" },
-    { id: "baco-bond", label: "BaCo Bond", code: "PSL" },
+    { id: "verformt-lasche", label: "AL · Tiefgezogen·Lasche", code: "AL" },
+    { id: "verformte-ronde", label: "Tiefgezogen", code: "—" },
   ];
 
   return (
